@@ -31,7 +31,12 @@ import { TopBar } from "./components/TopBar";
 import { RequirementColumn } from "./components/RequirementColumn";
 import { RightPanel } from "./components/RightPanel";
 import { GraphView } from "./components/GraphView";
-import { exportYaml, exportMarkdown, importYamlFile } from "./export";
+import {
+  exportYaml,
+  exportMarkdown,
+  importYamlFile,
+  validateProjectData,
+} from "./export";
 import type { ImportResult } from "./export";
 
 // ── Local Storage ──────────────────────────────────────────────────────────
@@ -43,8 +48,9 @@ function loadFromStorage(): ProjectData {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as ProjectData;
-      if (parsed.project && Array.isArray(parsed.items) && Array.isArray(parsed.links)) {
-        return parsed;
+      const validated = validateProjectData(parsed);
+      if (validated.ok) {
+        return validated.data;
       }
     }
   } catch {
@@ -229,8 +235,8 @@ function App() {
     if (!window.confirm("모든 데이터를 삭제하고 새 프로젝트를 시작하시겠습니까?")) return;
     
     // Generate a simple unique ID as fallback for crypto.randomUUID
-    const newId = (typeof crypto.randomUUID === 'function') 
-      ? crypto.randomUUID() 
+    const newId = (globalThis.crypto && typeof globalThis.crypto.randomUUID === 'function')
+      ? globalThis.crypto.randomUUID()
       : `project-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
     const newProject: ProjectData = {
@@ -306,6 +312,13 @@ function App() {
 
     return result;
   }, [data.items, searchQuery, filterWarningOnly, warnings]);
+
+  const visibleLinks = useMemo(() => {
+    const visibleIds = new Set(visibleItems.map((item) => item.id));
+    return data.links.filter(
+      (link) => visibleIds.has(link.sourceId) && visibleIds.has(link.targetId)
+    );
+  }, [visibleItems, data.links]);
 
   // ── SVG connector paths (responsive via ResizeObserver) ───────────────────
   const workspaceRef = useRef<HTMLDivElement>(null);
@@ -453,7 +466,7 @@ function App() {
             <div style={{ flex: 1, position: 'relative' }}>
               <GraphView
                 items={visibleItems}
-                links={data.links}
+                links={visibleLinks}
                 onSelect={(id) => handleSelect(id)}
               />
             </div>

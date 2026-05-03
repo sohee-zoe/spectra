@@ -10,7 +10,10 @@ import type {
 } from "./types";
 
 function uuid(): string {
-  return crypto.randomUUID();
+  if (globalThis.crypto && typeof globalThis.crypto.randomUUID === "function") {
+    return globalThis.crypto.randomUUID();
+  }
+  return `id-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
 }
 
 function now(): string {

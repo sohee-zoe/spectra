@@ -1,6 +1,10 @@
 import yaml from "js-yaml";
 import type { ProjectData } from "./domain/types";
-import { getLabel, validateTraceability } from "./domain/projectHelpers";
+import {
+  getLabel,
+  validateStructure,
+  validateTraceability,
+} from "./domain/projectHelpers";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -99,7 +103,11 @@ export function exportYaml(data: ProjectData): void {
 
 // ── Markdown Export ────────────────────────────────────────────────────────
 
-export function exportMarkdown(data: ProjectData): void {
+function markdownTableCell(value: string): string {
+  return value.replace(/\r?\n/g, " ").replace(/\|/g, "\\|").trim();
+}
+
+export function projectToMarkdown(data: ProjectData): string {
   const warnings = validateTraceability(data);
   const items = data.items;
   const links = data.links;
@@ -232,7 +240,9 @@ export function exportMarkdown(data: ProjectData): void {
 
       if (linkedSrIds.length === 0) {
         const hasWarning = warnings.some((w) => w.itemId === ur.id);
-        lines.push(`| ${urLabel} | ${ur.content} | _None_ | — | ${hasWarning ? "⚠ Warning" : "OK"} |`);
+        lines.push(
+          `| ${urLabel} | ${markdownTableCell(ur.content)} | _None_ | — | ${hasWarning ? "⚠ Warning" : "OK"} |`
+        );
       } else {
         for (const srId of linkedSrIds) {
           const sr = items.find((i) => i.id === srId);
@@ -256,7 +266,7 @@ export function exportMarkdown(data: ProjectData): void {
             linkedFtIds.some((ftId) => warnings.some((w) => w.itemId === ftId));
 
           lines.push(
-            `| ${urLabel} | ${ur.content} | ${srLabel} | ${ftLabels || "_None_"} | ${hasWarning ? "⚠ Warning" : "OK"} |`
+            `| ${urLabel} | ${markdownTableCell(ur.content)} | ${srLabel} | ${ftLabels || "_None_"} | ${hasWarning ? "⚠ Warning" : "OK"} |`
           );
         }
       }
@@ -276,7 +286,11 @@ export function exportMarkdown(data: ProjectData): void {
   }
   lines.push("");
 
-  const content = lines.join("\n");
+  return lines.join("\n");
+}
+
+export function exportMarkdown(data: ProjectData): void {
+  const content = projectToMarkdown(data);
   const filename = `${formatDatePrefix()}-${slugify(data.project.name)}.md`;
   downloadFile(content, filename, "text/markdown");
 }
@@ -294,7 +308,7 @@ function isNumber(v: unknown): v is number {
   return typeof v === "number";
 }
 
-function validateImport(raw: unknown): ImportResult {
+export function validateProjectData(raw: unknown): ImportResult {
   if (typeof raw !== "object" || raw === null) {
     return { ok: false, error: "File is not a valid YAML object." };
   }
@@ -342,19 +356,40 @@ function validateImport(raw: unknown): ImportResult {
     }
   }
 
+  const data: ProjectData = {
+    project: {
+      id: p.id as string,
+      name: p.name as string,
+      version: p.version as string,
+      updatedAt: p.updatedAt as string,
+    },
+    items: r.items as ProjectData["items"],
+    links: r.links as ProjectData["links"],
+  };
+
+  const structuralErrors = validateStructure(data);
+  if (structuralErrors.length > 0) {
+    return {
+      ok: false,
+      error: `Invalid traceability structure: ${structuralErrors
+        .map((e) => `${e.kind}:${e.linkId}`)
+        .join(", ")}`,
+    };
+  }
+
   return {
     ok: true,
-    data: {
-      project: {
-        id: p.id as string,
-        name: p.name as string,
-        version: p.version as string,
-        updatedAt: p.updatedAt as string,
-      },
-      items: r.items as ProjectData["items"],
-      links: r.links as ProjectData["links"],
-    },
+    data,
   };
+}
+
+export function parseProjectYaml(text: string): ImportResult {
+  try {
+    const parsed = yaml.load(text);
+    return validateProjectData(parsed);
+  } catch (err) {
+    return { ok: false, error: `YAML parse error: ${String(err)}` };
+  }
 }
 
 export function importYamlFile(onLoad: (result: ImportResult) => void): void {
@@ -366,13 +401,8 @@ export function importYamlFile(onLoad: (result: ImportResult) => void): void {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (e) => {
-      try {
-        const text = e.target?.result as string;
-        const parsed = yaml.load(text);
-        onLoad(validateImport(parsed));
-      } catch (err) {
-        onLoad({ ok: false, error: `YAML parse error: ${String(err)}` });
-      }
+      const text = e.target?.result as string;
+      onLoad(parseProjectYaml(text));
     };
     reader.readAsText(file);
   };
