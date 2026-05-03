@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest";
 import {
   createEmptyProject,
   createItem,
-  updateItemContent,
   deleteItem,
   reorderItem,
   addLink,

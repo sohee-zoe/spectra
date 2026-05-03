@@ -1,5 +1,5 @@
 import yaml from "js-yaml";
-import type { ProjectData, TraceabilityWarning } from "./domain/types";
+import type { ProjectData } from "./domain/types";
 import { getLabel, validateTraceability } from "./domain/projectHelpers";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
