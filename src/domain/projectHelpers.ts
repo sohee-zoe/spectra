@@ -37,6 +37,15 @@ function nextIndex(items: RequirementItem[], type: RequirementType): number {
   return ofType.length + 1;
 }
 
+export function normalizeTags(tags?: string[]): string[] | undefined {
+  if (!tags) return undefined;
+  const normalized = tags
+    .map((tag) => tag.trim().toLowerCase())
+    .filter(Boolean);
+  const unique = [...new Set(normalized)];
+  return unique.length > 0 ? unique : undefined;
+}
+
 export function createItem(
   data: ProjectData,
   type: RequirementType,
@@ -54,6 +63,7 @@ export function createItem(
     protocol: extraFields?.protocol?.trim() || undefined,
     dataFormat: extraFields?.dataFormat?.trim() || undefined,
     payload: extraFields?.payload?.trim() || undefined,
+    tags: normalizeTags(extraFields?.tags),
     createdAt: now(),
     updatedAt: now(),
   };
@@ -87,6 +97,7 @@ export function updateItemFields(
           protocol: fields.protocol?.trim() || undefined,
           dataFormat: fields.dataFormat?.trim() || undefined,
           payload: fields.payload?.trim() || undefined,
+          tags: normalizeTags(fields.tags),
           updatedAt: now(),
         }
       : i

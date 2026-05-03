@@ -26,6 +26,31 @@ type Props = {
   onCancelDelete: () => void;
 };
 
+function parseTagsInput(value: string): string[] | undefined {
+  const tags = value
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+  return tags.length > 0 ? tags : undefined;
+}
+
+function formatTagsInput(tags?: string[]): string {
+  return tags?.join(", ") ?? "";
+}
+
+function TagChips({ tags }: { tags?: string[] }) {
+  if (!tags || tags.length === 0) return null;
+  return (
+    <div className="tag-list">
+      {tags.map((tag) => (
+        <span key={tag} className="tag-chip">
+          {tag}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 // ── SR edit form ────────────────────────────────────────────────────────────
 
 function SREditForm({
@@ -42,6 +67,7 @@ function SREditForm({
   const [protocol, setProtocol] = useState(item.protocol ?? "");
   const [dataFormat, setDataFormat] = useState(item.dataFormat ?? "");
   const [payload, setPayload] = useState(item.payload ?? "");
+  const [tags, setTags] = useState(formatTagsInput(item.tags));
   const [content, setContent] = useState(item.content);
 
   function togglePriority(p: RequirementPriority) {
@@ -115,6 +141,16 @@ function SREditForm({
       </div>
 
       <div className="sr-field">
+        <label className="sr-field-label">Tags</label>
+        <input
+          className="sr-field-input"
+          value={tags}
+          onChange={(e) => setTags(e.target.value)}
+          placeholder="auth, security, mvp"
+        />
+      </div>
+
+      <div className="sr-field">
         <label className="sr-field-label">Payload / Schema</label>
         <textarea
           className="sr-field-input"
@@ -138,6 +174,7 @@ function SREditForm({
               protocol: protocol.trim() || undefined,
               dataFormat: dataFormat.trim() || undefined,
               payload: payload.trim() || undefined,
+              tags: parseTagsInput(tags),
             })
           }
           disabled={!content.trim()}
@@ -178,6 +215,7 @@ function SRView({ item }: { item: RequirementItem }) {
           {item.payload}
         </div>
       )}
+      <TagChips tags={item.tags} />
     </>
   );
 }
@@ -201,6 +239,7 @@ export function RequirementCard({
   onCancelDelete,
 }: Props) {
   const [draft, setDraft] = useState(item.content);
+  const [tagDraft, setTagDraft] = useState(formatTagsInput(item.tags));
 
   const {
     attributes,
@@ -223,8 +262,11 @@ export function RequirementCard({
   };
 
   useEffect(() => {
-    if (isEditing) setDraft(item.content);
-  }, [isEditing, item.content]);
+    if (isEditing) {
+      setDraft(item.content);
+      setTagDraft(formatTagsInput(item.tags));
+    }
+  }, [isEditing, item.content, item.tags]);
 
   const label = getLabel(item);
   const hasWarning = warnings.length > 0;
@@ -257,10 +299,19 @@ export function RequirementCard({
               autoFocus
               aria-label={`Edit ${label}`}
             />
+            <div className="sr-field">
+              <label className="sr-field-label">Tags</label>
+              <input
+                className="sr-field-input"
+                value={tagDraft}
+                onChange={(e) => setTagDraft(e.target.value)}
+                placeholder="auth, security, mvp"
+              />
+            </div>
             <div className="card-actions">
               <button
                 className="btn btn-primary"
-                onClick={() => onSave({ content: draft })}
+                onClick={() => onSave({ content: draft, tags: parseTagsInput(tagDraft) })}
                 disabled={!draft.trim()}
               >
                 Save
@@ -337,7 +388,10 @@ export function RequirementCard({
       {isSR ? (
         <SRView item={item} />
       ) : (
-        <div className="card-content">{item.content}</div>
+        <>
+          <div className="card-content">{item.content}</div>
+          <TagChips tags={item.tags} />
+        </>
       )}
 
       <div className="card-actions">

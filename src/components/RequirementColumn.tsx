@@ -38,6 +38,14 @@ const TYPE_LABELS: Record<RequirementType, string> = {
   FEATURE: "Feature",
 };
 
+function parseTagsInput(value: string): string[] | undefined {
+  const tags = value
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+  return tags.length > 0 ? tags : undefined;
+}
+
 // ── SR Add Form ─────────────────────────────────────────────────────────────
 
 function SRAddForm({
@@ -52,6 +60,7 @@ function SRAddForm({
   const [protocol, setProtocol] = useState("");
   const [dataFormat, setDataFormat] = useState("");
   const [payload, setPayload] = useState("");
+  const [tags, setTags] = useState("");
   const [content, setContent] = useState("");
 
   function togglePriority(p: RequirementPriority) {
@@ -115,6 +124,16 @@ function SRAddForm({
       </div>
 
       <div className="sr-field">
+        <label className="sr-field-label">Tags</label>
+        <input
+          className="sr-field-input"
+          value={tags}
+          onChange={(e) => setTags(e.target.value)}
+          placeholder="auth, security, mvp"
+        />
+      </div>
+
+      <div className="sr-field">
         <label className="sr-field-label">Payload / Schema</label>
         <textarea
           className="sr-field-input"
@@ -151,6 +170,7 @@ function SRAddForm({
               protocol: protocol.trim() || undefined,
               dataFormat: dataFormat.trim() || undefined,
               payload: payload.trim() || undefined,
+              tags: parseTagsInput(tags),
             })
           }
           disabled={!content.trim()}
@@ -186,6 +206,7 @@ export function RequirementColumn({
   onCancelAdd,
 }: Props) {
   const [draft, setDraft] = useState("");
+  const [tagDraft, setTagDraft] = useState("");
 
   const typeItems = items.filter((i) => i.type === type);
   const label = TYPE_LABELS[type];
@@ -200,12 +221,14 @@ export function RequirementColumn({
 
   function handleAdd() {
     if (!draft.trim()) return;
-    onAdd({ content: draft });
+    onAdd({ content: draft, tags: parseTagsInput(tagDraft) });
     setDraft("");
+    setTagDraft("");
   }
 
   function handleCancelAdd() {
     setDraft("");
+    setTagDraft("");
     onCancelAdd();
   }
 
@@ -269,6 +292,15 @@ export function RequirementColumn({
               autoFocus
               aria-label={`New ${label} content`}
             />
+            <div className="sr-field">
+              <label className="sr-field-label">Tags</label>
+              <input
+                className="sr-field-input"
+                value={tagDraft}
+                onChange={(e) => setTagDraft(e.target.value)}
+                placeholder="auth, security, mvp"
+              />
+            </div>
             <div className="add-form-actions">
               <button className="btn btn-ghost" onClick={handleCancelAdd}>
                 Cancel

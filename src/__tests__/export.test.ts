@@ -28,6 +28,7 @@ function baseProject(): ProjectData {
         type: "SR",
         index: 1,
         content: "System response",
+        tags: ["api", "security"],
         createdAt: "2026-05-03T00:00:00.000Z",
         updatedAt: "2026-05-03T00:00:00.000Z",
       },
@@ -60,6 +61,54 @@ function baseProject(): ProjectData {
 }
 
 describe("parseProjectYaml", () => {
+  it("accepts imported item tags", () => {
+    const result = parseProjectYaml(`
+project:
+  id: project-1
+  name: Tagged
+  version: "1.0.0"
+  updatedAt: "2026-05-03T00:00:00.000Z"
+items:
+  - id: ur-1
+    type: UR
+    index: 1
+    content: Tagged requirement
+    tags:
+      - auth
+      - security
+    createdAt: "2026-05-03T00:00:00.000Z"
+    updatedAt: "2026-05-03T00:00:00.000Z"
+links: []
+`);
+
+    expect(result.ok).toBe(true);
+    expect(result.ok ? result.data.items[0]!.tags : []).toEqual(["auth", "security"]);
+  });
+
+  it("rejects imported item tags that are not strings", () => {
+    const result = parseProjectYaml(`
+project:
+  id: project-1
+  name: Broken
+  version: "1.0.0"
+  updatedAt: "2026-05-03T00:00:00.000Z"
+items:
+  - id: ur-1
+    type: UR
+    index: 1
+    content: Tagged requirement
+    tags:
+      - auth
+      - 123
+    createdAt: "2026-05-03T00:00:00.000Z"
+    updatedAt: "2026-05-03T00:00:00.000Z"
+links: []
+`);
+
+    expect(result.ok).toBe(false);
+    expect(result.ok ? "" : result.error).toContain("Invalid item");
+  });
+
   it("rejects dangling imported links", () => {
     const result = parseProjectYaml(`
 project:
@@ -110,6 +159,12 @@ describe("projectToMarkdown", () => {
 
     expect(markdown).toContain("Need value \\| with pipe and newline");
     expect(markdown).not.toContain("| Need value | with pipe\nand newline |");
+  });
+
+  it("includes item tags", () => {
+    const markdown = projectToMarkdown(baseProject());
+
+    expect(markdown).toContain("Tags: `api`, `security`");
   });
 });
 

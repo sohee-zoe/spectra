@@ -45,6 +45,14 @@ describe("createItem", () => {
     expect(p.items[0]!.content).toBe("trimmed");
   });
 
+  it("normalizes tags", () => {
+    let p = createEmptyProject();
+    p = createItem(p, "UR", "Tagged", {
+      tags: [" auth ", "security", "auth", "", " SECURITY "],
+    });
+    expect(p.items[0]!.tags).toEqual(["auth", "security"]);
+  });
+
   it("assigns unique UUIDs", () => {
     const p = makeProject();
     const ids = p.items.map((i) => i.id);

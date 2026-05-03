@@ -2,6 +2,7 @@ import yaml from "js-yaml";
 import type { ProjectData } from "./domain/types";
 import {
   getLabel,
+  normalizeTags,
   validateStructure,
   validateTraceability,
 } from "./domain/projectHelpers";
@@ -107,6 +108,11 @@ function markdownTableCell(value: string): string {
   return value.replace(/\r?\n/g, " ").replace(/\|/g, "\\|").trim();
 }
 
+function formatTags(tags?: string[]): string | null {
+  if (!tags || tags.length === 0) return null;
+  return `Tags: ${tags.map((tag) => `\`${tag}\``).join(", ")}`;
+}
+
 export function projectToMarkdown(data: ProjectData): string {
   const warnings = validateTraceability(data);
   const items = data.items;
@@ -158,6 +164,11 @@ export function projectToMarkdown(data: ProjectData): string {
       lines.push("");
       lines.push(ur.content);
       lines.push("");
+      const tags = formatTags(ur.tags);
+      if (tags) {
+        lines.push(tags);
+        lines.push("");
+      }
       lines.push(`Linked SR: ${linkedSrs.length > 0 ? linkedSrs.join(", ") : "_None_"}`);
       lines.push("");
     }
@@ -190,6 +201,12 @@ export function projectToMarkdown(data: ProjectData): string {
       lines.push(sr.content);
       lines.push("");
 
+      const tags = formatTags(sr.tags);
+      if (tags) {
+        lines.push(tags);
+        lines.push("");
+      }
+
       if (sr.payload) {
         lines.push("**Payload / Schema:**");
         lines.push("```");
@@ -218,6 +235,11 @@ export function projectToMarkdown(data: ProjectData): string {
       lines.push("");
       lines.push(ft.content);
       lines.push("");
+      const tags = formatTags(ft.tags);
+      if (tags) {
+        lines.push(tags);
+        lines.push("");
+      }
       lines.push(`Linked SR: ${linkedSrs.length > 0 ? linkedSrs.join(", ") : "_None_"}`);
       lines.push("");
     }
@@ -333,7 +355,9 @@ export function validateProjectData(raw: unknown): ImportResult {
       !isNumber(i.index) ||
       !isString(i.content) ||
       !isString(i.createdAt) ||
-      !isString(i.updatedAt)
+      !isString(i.updatedAt) ||
+      (i.tags !== undefined &&
+        (!Array.isArray(i.tags) || !i.tags.every((tag) => isString(tag))))
     ) {
       return { ok: false, error: `Invalid item: ${JSON.stringify(item)}` };
     }
@@ -363,7 +387,10 @@ export function validateProjectData(raw: unknown): ImportResult {
       version: p.version as string,
       updatedAt: p.updatedAt as string,
     },
-    items: r.items as ProjectData["items"],
+    items: (r.items as ProjectData["items"]).map((item) => ({
+      ...item,
+      tags: normalizeTags(item.tags),
+    })),
     links: r.links as ProjectData["links"],
   };
 

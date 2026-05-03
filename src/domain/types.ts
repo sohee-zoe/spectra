@@ -10,6 +10,7 @@ export type ItemEditFields = {
   protocol?: string;     // Communication protocol (e.g. REST, gRPC)
   dataFormat?: string;   // Data format (e.g. JSON, Protobuf)
   payload?: string;      // Payload schema or description
+  tags?: string[];        // Searchable labels shared by UR/SR/Feature
 };
 
 export type RequirementItem = {
@@ -22,6 +23,7 @@ export type RequirementItem = {
   protocol?: string;
   dataFormat?: string;
   payload?: string;
+  tags?: string[];
   createdAt: string;
   updatedAt: string;
 };

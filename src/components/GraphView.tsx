@@ -44,6 +44,24 @@ export function GraphView({ items, links, onSelect }: Props) {
               <div style={{ marginTop: 6, color: "var(--text-dim)", fontSize: "16px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                 {item.content}
               </div>
+              {item.tags && item.tags.length > 0 && (
+                <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 8 }}>
+                  {item.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      style={{
+                        border: "1px solid var(--border)",
+                        borderRadius: 4,
+                        color: "var(--text)",
+                        fontSize: 11,
+                        padding: "1px 5px",
+                      }}
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           ) 
         },

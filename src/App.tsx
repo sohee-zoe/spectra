@@ -304,6 +304,7 @@ function App() {
         return label.includes(q) ||
           i.content.toLowerCase().includes(q) ||
           i.name?.toLowerCase().includes(q) ||
+          i.tags?.some((tag) => tag.toLowerCase().includes(q)) ||
           i.payload?.toLowerCase().includes(q) ||
           i.protocol?.toLowerCase().includes(q) ||
           i.dataFormat?.toLowerCase().includes(q);
