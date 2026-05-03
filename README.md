@@ -6,6 +6,16 @@ Spectra는 엔지니어링 프로젝트의 **사용자 요구사항(UR)**, **시
 
 **Live Demo**: https://spectra-pied.vercel.app
 
+## Demo
+
+### Board View
+
+<img src="docs/assets/spectra-board.png" alt="Spectra board view" width="900">
+
+### Graph View
+
+<img src="docs/assets/spectra-graph.png" alt="Spectra graph view" width="900">
+
 ## Key Features
 
 - **Interactive Board**: 3단 컬럼 리스트 뷰를 통해 요구사항을 구조적으로 관리합니다.
