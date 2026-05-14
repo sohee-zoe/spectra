@@ -31,6 +31,8 @@ import { TopBar } from "./components/TopBar";
 import { RequirementColumn } from "./components/RequirementColumn";
 import { RightPanel } from "./components/RightPanel";
 import { GraphView } from "./components/GraphView";
+import { DocumentOutline } from "./components/DocumentOutline";
+import { DEFAULT_LABEL_OPTIONS } from "./components/EditableChoiceFields";
 import {
   exportYaml,
   exportMarkdown,
@@ -80,6 +82,8 @@ function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterWarningOnly, setFilterWarningOnly] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "graph">("list");
+  const [outlineWidth, setOutlineWidth] = useState(320);
+  const isResizingOutline = useRef(false);
   const [theme, setTheme] = useState<"dark" | "light">(() => {
     return (localStorage.getItem("spectra.theme") as "dark" | "light") || "dark";
   });
@@ -102,6 +106,26 @@ function App() {
 
   // ── Warnings ──────────────────────────────────────────────────────────────
   const warnings = useMemo(() => validateTraceability(data), [data]);
+
+  // ── Extra label options (custom labels added during editing sessions) ──────
+  const [extraLabelOptions, setExtraLabelOptions] = useState<string[]>([]);
+
+  const labelOptions = useMemo(() => {
+    const options = new Set([...DEFAULT_LABEL_OPTIONS, ...extraLabelOptions]);
+    for (const item of data.items) {
+      for (const tag of item.tags ?? []) {
+        options.add(tag);
+      }
+    }
+    return Array.from(options).sort();
+  }, [data.items, extraLabelOptions]);
+
+  const handleAddCustomLabel = useCallback((label: string) => {
+    setExtraLabelOptions((prev) => {
+      const norm = label.trim().toLowerCase();
+      return prev.includes(norm) ? prev : [...prev, norm];
+    });
+  }, []);
 
   // ── Clear selection on filter changes ─────────────────────────────────────
   useEffect(() => {
@@ -149,6 +173,35 @@ function App() {
       handleSelect(null);
     }
   }
+
+  const startResizingOutline = useCallback((event: React.MouseEvent) => {
+    event.preventDefault();
+    isResizingOutline.current = true;
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+  }, []);
+
+  const stopResizingOutline = useCallback(() => {
+    isResizingOutline.current = false;
+    document.body.style.cursor = "";
+    document.body.style.userSelect = "";
+  }, []);
+
+  const resizeOutline = useCallback((event: MouseEvent) => {
+    if (!isResizingOutline.current || !workspaceRef.current) return;
+    const workspaceLeft = workspaceRef.current.getBoundingClientRect().left;
+    const nextWidth = event.clientX - workspaceLeft;
+    setOutlineWidth(Math.min(Math.max(nextWidth, 240), 520));
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("mousemove", resizeOutline);
+    window.addEventListener("mouseup", stopResizingOutline);
+    return () => {
+      window.removeEventListener("mousemove", resizeOutline);
+      window.removeEventListener("mouseup", stopResizingOutline);
+    };
+  }, [resizeOutline, stopResizingOutline]);
 
   // ── Add ───────────────────────────────────────────────────────────────────
   function handleStartAdd(type: RequirementType) {
@@ -281,11 +334,32 @@ function App() {
 
   const connectedIds = useMemo(() => {
     if (!selectedId) return new Set<string>();
-    const set = new Set<string>();
+    
+    const adj = new Map<string, string[]>();
     for (const l of data.links) {
-      if (l.sourceId === selectedId) set.add(l.targetId);
-      if (l.targetId === selectedId) set.add(l.sourceId);
+      if (!adj.has(l.sourceId)) adj.set(l.sourceId, []);
+      if (!adj.has(l.targetId)) adj.set(l.targetId, []);
+      adj.get(l.sourceId)!.push(l.targetId);
+      adj.get(l.targetId)!.push(l.sourceId);
     }
+
+    const set = new Set<string>();
+    const queue = [selectedId];
+    set.add(selectedId);
+
+    let head = 0;
+    while (head < queue.length) {
+      const current = queue[head++];
+      const neighbors = adj.get(current) || [];
+      for (const n of neighbors) {
+        if (!set.has(n)) {
+          set.add(n);
+          queue.push(n);
+        }
+      }
+    }
+    
+    set.delete(selectedId);
     return set;
   }, [selectedId, data.links]);
 
@@ -305,6 +379,8 @@ function App() {
           i.content.toLowerCase().includes(q) ||
           i.name?.toLowerCase().includes(q) ||
           i.tags?.some((tag) => tag.toLowerCase().includes(q)) ||
+          i.acceptanceCriteria?.toLowerCase().includes(q) ||
+          i.constraints?.toLowerCase().includes(q) ||
           i.payload?.toLowerCase().includes(q) ||
           i.protocol?.toLowerCase().includes(q) ||
           i.dataFormat?.toLowerCase().includes(q);
@@ -346,21 +422,26 @@ function App() {
       };
     };
 
-    const src = getCenter(selectedId);
-    if (!src) { setConnectorPaths([]); return; }
-
+    const activeNodes = new Set([...connectedIds, selectedId]);
     const paths: string[] = [];
-    for (const targetId of connectedIds) {
-      const tgt = getCenter(targetId);
-      if (!tgt) continue;
-      const toRight = src.right < tgt.left;
-      const x1 = toRight ? src.right : src.left;
-      const x2 = toRight ? tgt.left : tgt.right;
-      const y1 = src.centerY;
-      const y2 = tgt.centerY;
-      const ctrl = Math.abs(x2 - x1) * 0.45;
+    
+    for (const link of visibleLinks) {
+      if (!activeNodes.has(link.sourceId) || !activeNodes.has(link.targetId)) continue;
+      
+      const s = getCenter(link.sourceId);
+      const t = getCenter(link.targetId);
+      if (!s || !t) continue;
+      
+      const toRight = s.right < t.left;
+      const x1 = toRight ? s.right : s.left;
+      const x2 = toRight ? t.left : t.right;
+      const y1 = s.centerY;
+      const y2 = t.centerY;
+      
+      // Use exact midpoint for control points to prevent overlapping backwards loops (squiggly lines)
+      const midX = x1 + (x2 - x1) / 2;
       paths.push(
-        `M ${x1} ${y1} C ${x1 + (toRight ? ctrl : -ctrl)} ${y1} ${x2 + (toRight ? -ctrl : ctrl)} ${y2} ${x2} ${y2}`
+        `M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`
       );
     }
     setConnectorPaths(paths);
@@ -437,37 +518,69 @@ function App() {
           )}
 
           {viewMode === "list" ? (
-            <div className="columns" ref={columnsRef}>
-              {COLUMNS.map((type) => (
-                <RequirementColumn
-                  key={type}
-                  type={type}
-                  items={visibleItems}
-                  warnings={warnings}
-                  links={data.links}
-                  selectedId={selectedId}
-                  connectedIds={connectedIds}
-                  editingId={editing?.id ?? null}
-                  confirmDeleteId={confirmDelete?.id ?? null}
-                  isAdding={adding?.type === type}
-                  onSelect={handleSelect}
-                  onEdit={handleEdit}
-                  onSave={handleSave}
-                  onCancelEdit={handleCancelEdit}
-                  onRequestDelete={handleRequestDelete}
-                  onConfirmDelete={handleConfirmDelete}
-                  onCancelDelete={handleCancelDelete}
-                  onStartAdd={() => handleStartAdd(type)}
-                  onAdd={handleAdd}
-                  onCancelAdd={handleCancelAdd}
-                />
-              ))}
+            <div
+              className="review-workspace"
+              style={{ "--outline-width": `${outlineWidth}px` } as React.CSSProperties}
+            >
+              <DocumentOutline
+                items={visibleItems}
+                warnings={warnings}
+                links={data.links}
+                selectedId={selectedId}
+                onSelect={handleSelect}
+              />
+              <div
+                className="outline-resizer"
+                role="separator"
+                aria-label="Resize document outline"
+                aria-orientation="vertical"
+                aria-valuemin={240}
+                aria-valuemax={520}
+                aria-valuenow={outlineWidth}
+                onMouseDown={startResizingOutline}
+              />
+              <div className="trace-board" role="region" aria-label="Trace board">
+                <div className="workspace-panel-header trace-board-header">
+                  <h2 className="workspace-panel-title">Trace Board</h2>
+                  <span className="workspace-panel-count">{visibleLinks.length} links</span>
+                </div>
+                <div className="columns" ref={columnsRef}>
+                  {COLUMNS.map((type) => (
+                    <RequirementColumn
+                      key={type}
+                      type={type}
+                      items={visibleItems}
+                      warnings={warnings}
+                      links={data.links}
+                      labelOptions={labelOptions}
+                      selectedId={selectedId}
+                      connectedIds={connectedIds}
+                      editingId={editing?.id ?? null}
+                      confirmDeleteId={confirmDelete?.id ?? null}
+                      isAdding={adding?.type === type}
+                      onSelect={handleSelect}
+                      onEdit={handleEdit}
+                      onSave={handleSave}
+                      onCancelEdit={handleCancelEdit}
+                      onRequestDelete={handleRequestDelete}
+                      onConfirmDelete={handleConfirmDelete}
+                      onCancelDelete={handleCancelDelete}
+                      onStartAdd={() => handleStartAdd(type)}
+                      onAdd={handleAdd}
+                      onCancelAdd={handleCancelAdd}
+                      onAddCustomLabel={handleAddCustomLabel}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           ) : (
             <div style={{ flex: 1, position: 'relative' }}>
               <GraphView
                 items={visibleItems}
                 links={visibleLinks}
+                selectedId={selectedId}
+                connectedIds={connectedIds}
                 onSelect={(id) => handleSelect(id)}
               />
             </div>

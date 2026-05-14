@@ -1,18 +1,23 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type {
   ItemEditFields,
   RequirementItem,
   RequirementPriority,
+  RequirementReviewStatus,
   TraceabilityWarning,
 } from "../domain/types";
 import { getLabel } from "../domain/projectHelpers";
+import { chipClassName, getItemAttributeChips, getItemTagChips, getStatusLabel } from "./reviewPresentation";
+import { MarkdownView } from "./MarkdownView";
+import { ChoiceOrAddField, LabelsField } from "./EditableChoiceFields";
 
 type Props = {
   item: RequirementItem;
   warnings: TraceabilityWarning[];
   linkCount: number;
+  labelOptions: string[];
   isSelected: boolean;
   isLinked: boolean;
   isEditing: boolean;
@@ -24,28 +29,68 @@ type Props = {
   onRequestDelete: () => void;
   onConfirmDelete: () => void;
   onCancelDelete: () => void;
+  onAddCustomLabel: (label: string) => void;
 };
 
-function parseTagsInput(value: string): string[] | undefined {
-  const tags = value
-    .split(",")
-    .map((tag) => tag.trim())
-    .filter(Boolean);
-  return tags.length > 0 ? tags : undefined;
-}
+const STATUS_OPTIONS: RequirementReviewStatus[] = [
+  "stable",
+  "approved",
+  "needs review",
+  "in review",
+];
 
-function formatTagsInput(tags?: string[]): string {
-  return tags?.join(", ") ?? "";
-}
-
-function TagChips({ tags }: { tags?: string[] }) {
-  if (!tags || tags.length === 0) return null;
+function StatusField({
+  value,
+  onChange,
+}: {
+  value: RequirementReviewStatus | undefined;
+  onChange: (value: RequirementReviewStatus | undefined) => void;
+}) {
   return (
-    <div className="tag-list">
-      {tags.map((tag) => (
-        <span key={tag} className="tag-chip">
-          {tag}
-        </span>
+    <div className="sr-field">
+      <label className="sr-field-label">Status</label>
+      <select
+        className="sr-field-input"
+        aria-label="Status"
+        value={value ?? ""}
+        onChange={(e) => onChange((e.target.value || undefined) as RequirementReviewStatus | undefined)}
+      >
+        <option value="">Auto</option>
+        {STATUS_OPTIONS.map((status) => (
+          <option key={status} value={status}>
+            {status}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+
+
+function CardAttributeRow({
+  item,
+  warnings,
+  linkCount,
+}: {
+  item: RequirementItem;
+  warnings: TraceabilityWarning[];
+  linkCount: number;
+}) {
+  // Build a fake links array from linkCount to reuse shared helper
+  const fakeLinks = Array.from({ length: linkCount }, (_, i) => ({
+    id: `fake-${i}`, sourceId: item.id, targetId: "", type: "UR_TO_SR" as const, createdAt: "",
+  }));
+  const attrChips = getItemAttributeChips(item, warnings, fakeLinks);
+  const tagChips = getItemTagChips(item);
+  if (attrChips.length === 0 && tagChips.length === 0) return null;
+  return (
+    <div className="card-attribute-row">
+      {attrChips.map((chip) => (
+        <span key={chip.label} className={chipClassName(chip)}>{chip.label}</span>
+      ))}
+      {tagChips.map((chip) => (
+        <span key={chip.label} className={chipClassName(chip)}>{chip.label}</span>
       ))}
     </div>
   );
@@ -55,19 +100,24 @@ function TagChips({ tags }: { tags?: string[] }) {
 
 function SREditForm({
   item,
+  labelOptions,
   onSave,
   onCancel,
+  onAddCustomLabel,
 }: {
   item: RequirementItem;
+  labelOptions: string[];
   onSave: (fields: ItemEditFields) => void;
   onCancel: () => void;
+  onAddCustomLabel: (label: string) => void;
 }) {
   const [name, setName] = useState(item.name ?? "");
+  const [customPrefix, setCustomPrefix] = useState(item.customPrefix ?? "");
+  const [reviewStatus, setReviewStatus] = useState<RequirementReviewStatus | undefined>(item.reviewStatus);
   const [priority, setPriority] = useState<RequirementPriority | undefined>(item.priority);
-  const [protocol, setProtocol] = useState(item.protocol ?? "");
-  const [dataFormat, setDataFormat] = useState(item.dataFormat ?? "");
-  const [payload, setPayload] = useState(item.payload ?? "");
-  const [tags, setTags] = useState(formatTagsInput(item.tags));
+  const [acceptanceCriteria, setAcceptanceCriteria] = useState(item.acceptanceCriteria ?? "");
+  const [constraints, setConstraints] = useState(item.constraints ?? "");
+  const [tags, setTags] = useState<string[]>(item.tags ?? []);
   const [content, setContent] = useState(item.content);
 
   function togglePriority(p: RequirementPriority) {
@@ -82,7 +132,16 @@ function SREditForm({
           className="sr-field-input"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="System Requirement Name"
+        />
+      </div>
+
+      <div className="sr-field">
+        <label className="sr-field-label">Domain (for ID)</label>
+        <input
+          className="sr-field-input"
+          value={customPrefix}
+          onChange={(e) => setCustomPrefix(e.target.value)}
+          placeholder="e.g. ORD, AUTH"
         />
       </div>
 
@@ -93,9 +152,10 @@ function SREditForm({
           value={content}
           onChange={(e) => setContent(e.target.value)}
           autoFocus
-          placeholder="상세 설명"
         />
       </div>
+
+      <StatusField value={reviewStatus} onChange={setReviewStatus} />
 
       <div className="sr-field">
         <label className="sr-field-label">Priority</label>
@@ -106,7 +166,7 @@ function SREditForm({
             onClick={() => togglePriority("R")}
             title="Required"
           >
-            R
+            Required
           </button>
           <button
             type="button"
@@ -114,53 +174,34 @@ function SREditForm({
             onClick={() => togglePriority("O")}
             title="Optional"
           >
-            O
+            Optional
           </button>
         </div>
       </div>
 
-      <div className="sr-field-row">
-        <div className="sr-field sr-field-half">
-          <label className="sr-field-label">Protocol</label>
-          <input
-            className="sr-field-input"
-            value={protocol}
-            onChange={(e) => setProtocol(e.target.value)}
-            placeholder="REST, gRPC, WebSocket…"
-          />
-        </div>
-        <div className="sr-field sr-field-half">
-          <label className="sr-field-label">Data Format</label>
-          <input
-            className="sr-field-input"
-            value={dataFormat}
-            onChange={(e) => setDataFormat(e.target.value)}
-            placeholder="JSON, Protobuf, XML…"
-          />
-        </div>
-      </div>
-
       <div className="sr-field">
-        <label className="sr-field-label">Tags</label>
-        <input
-          className="sr-field-input"
-          value={tags}
-          onChange={(e) => setTags(e.target.value)}
-          placeholder="auth, security, mvp"
-        />
-      </div>
-
-      <div className="sr-field">
-        <label className="sr-field-label">Payload / Schema</label>
+        <label className="sr-field-label">Acceptance Criteria</label>
         <textarea
           className="sr-field-input"
-          value={payload}
-          onChange={(e) => setPayload(e.target.value)}
-          placeholder="데이터 스키마나 페이로드 설명..."
-          rows={2}
-          style={{ resize: "vertical", fontFamily: "monospace", fontSize: "17px" }}
+          value={acceptanceCriteria}
+          onChange={(e) => setAcceptanceCriteria(e.target.value)}
+          rows={3}
+          style={{ resize: "vertical" }}
         />
       </div>
+
+      <div className="sr-field">
+        <label className="sr-field-label">Constraints / Notes</label>
+        <textarea
+          className="sr-field-input"
+          value={constraints}
+          onChange={(e) => setConstraints(e.target.value)}
+          rows={2}
+          style={{ resize: "vertical" }}
+        />
+      </div>
+
+      <LabelsField value={tags} options={labelOptions} onChange={setTags} onAddCustom={onAddCustomLabel} />
 
       <div className="card-actions">
         <button
@@ -170,11 +211,12 @@ function SREditForm({
             onSave({
               content,
               name: name.trim() || undefined,
+              customPrefix: customPrefix.trim() || undefined,
+              reviewStatus,
               priority,
-              protocol: protocol.trim() || undefined,
-              dataFormat: dataFormat.trim() || undefined,
-              payload: payload.trim() || undefined,
-              tags: parseTagsInput(tags),
+              acceptanceCriteria: acceptanceCriteria.trim() || undefined,
+              constraints: constraints.trim() || undefined,
+              tags: tags.length > 0 ? tags : undefined,
             })
           }
           disabled={!content.trim()}
@@ -189,6 +231,120 @@ function SREditForm({
   );
 }
 
+function GeneralEditForm({
+  item,
+  labelOptions,
+  onSave,
+  onCancel,
+  onAddCustomLabel,
+}: {
+  item: RequirementItem;
+  labelOptions: string[];
+  onSave: (fields: ItemEditFields) => void;
+  onCancel: () => void;
+  onAddCustomLabel: (label: string) => void;
+}) {
+  const [content, setContent] = useState(item.content);
+  const [name, setName] = useState(item.name ?? "");
+  const [customPrefix, setCustomPrefix] = useState(item.customPrefix ?? "");
+  const [reviewStatus, setReviewStatus] = useState<RequirementReviewStatus | undefined>(item.reviewStatus);
+  const [reporter, setReporter] = useState(item.reporter ?? "");
+  const [owner, setOwner] = useState(item.owner ?? "");
+  const [verificationStatus, setVerificationStatus] = useState(item.verificationStatus ?? "");
+  const [tags, setTags] = useState<string[]>(item.tags ?? []);
+
+  return (
+    <div className="sr-edit-form" onKeyDown={(e) => e.stopPropagation()}>
+      <div className="sr-field">
+        <label className="sr-field-label">Name</label>
+        <input
+          className="sr-field-input"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+      </div>
+
+      <div className="sr-field">
+        <label className="sr-field-label">Domain (for ID)</label>
+        <input
+          className="sr-field-input"
+          value={customPrefix}
+          onChange={(e) => setCustomPrefix(e.target.value)}
+          placeholder="e.g. ORD, AUTH"
+        />
+      </div>
+
+      <div className="sr-field">
+        <label className="sr-field-label">Description</label>
+        <textarea
+          className="card-edit-textarea"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          autoFocus
+          aria-label={`Edit ${getLabel(item)}`}
+        />
+      </div>
+
+      <StatusField value={reviewStatus} onChange={setReviewStatus} />
+
+      {item.type === "UR" && (
+        <div className="sr-field">
+          <label className="sr-field-label">Reporter</label>
+          <input
+            className="sr-field-input"
+            value={reporter}
+            onChange={(e) => setReporter(e.target.value)}
+          />
+        </div>
+      )}
+
+      {item.type === "FEATURE" && (
+        <>
+          <div className="sr-field">
+            <label className="sr-field-label">Owner</label>
+            <input
+              className="sr-field-input"
+              value={owner}
+              onChange={(e) => setOwner(e.target.value)}
+            />
+          </div>
+          <ChoiceOrAddField
+            label="Verification"
+            value={verificationStatus}
+            onChange={setVerificationStatus}
+          />
+        </>
+      )}
+
+      <LabelsField value={tags} options={labelOptions} onChange={setTags} onAddCustom={onAddCustomLabel} />
+
+      <div className="card-actions">
+        <button
+          className="btn btn-primary"
+          onClick={() =>
+            onSave({
+              content,
+              name: name.trim() || undefined,
+              customPrefix: customPrefix.trim() || undefined,
+              reviewStatus,
+              reporter: reporter.trim() || undefined,
+              owner: owner.trim() || undefined,
+              verificationStatus: verificationStatus.trim() || undefined,
+              tags: tags.length > 0 ? tags : undefined,
+            })
+          }
+          disabled={!content.trim()}
+        >
+          Save
+        </button>
+        <button className="btn btn-ghost" onClick={onCancel}>
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── SR view ─────────────────────────────────────────────────────────────────
 
 function SRView({ item }: { item: RequirementItem }) {
@@ -196,26 +352,19 @@ function SRView({ item }: { item: RequirementItem }) {
     <>
       {item.name && <div className="sr-name">{item.name}</div>}
       <div className="card-content">{item.content}</div>
-      {(item.protocol || item.dataFormat) && (
-        <div className="sr-meta-row">
-          {item.protocol && (
-            <span className="sr-tag sr-tag-protocol" title="Protocol">
-              ⇄ {item.protocol}
-            </span>
-          )}
-          {item.dataFormat && (
-            <span className="sr-tag sr-tag-format" title="Data Format">
-              &#123;&#125; {item.dataFormat}
-            </span>
-          )}
+      {item.acceptanceCriteria && (
+        <div className="sr-review-block">
+          <div className="sr-review-block-title">Acceptance Criteria</div>
+          <MarkdownView content={item.acceptanceCriteria} />
         </div>
       )}
-      {item.payload && (
-        <div className="sr-payload">
-          {item.payload}
+      {item.constraints && (
+        <div className="sr-review-block">
+          <div className="sr-review-block-title">Constraints / Notes</div>
+          <MarkdownView content={item.constraints} />
         </div>
       )}
-      <TagChips tags={item.tags} />
+
     </>
   );
 }
@@ -226,6 +375,7 @@ export function RequirementCard({
   item,
   warnings,
   linkCount,
+  labelOptions,
   isSelected,
   isLinked,
   isEditing,
@@ -237,10 +387,8 @@ export function RequirementCard({
   onRequestDelete,
   onConfirmDelete,
   onCancelDelete,
+  onAddCustomLabel,
 }: Props) {
-  const [draft, setDraft] = useState(item.content);
-  const [tagDraft, setTagDraft] = useState(formatTagsInput(item.tags));
-
   const {
     attributes,
     listeners,
@@ -261,16 +409,10 @@ export function RequirementCard({
     zIndex: isDragging ? 10 : undefined,
   };
 
-  useEffect(() => {
-    if (isEditing) {
-      setDraft(item.content);
-      setTagDraft(formatTagsInput(item.tags));
-    }
-  }, [isEditing, item.content, item.tags]);
-
   const label = getLabel(item);
   const hasWarning = warnings.length > 0;
   const isSR = item.type === "SR";
+  const status = getStatusLabel(item, warnings);
 
   const cls = [
     "card",
@@ -289,38 +431,9 @@ export function RequirementCard({
           <span className="card-label">{label}</span>
         </div>
         {isSR ? (
-          <SREditForm item={item} onSave={onSave} onCancel={onCancelEdit} />
+          <SREditForm item={item} labelOptions={labelOptions} onSave={onSave} onCancel={onCancelEdit} onAddCustomLabel={onAddCustomLabel} />
         ) : (
-          <>
-            <textarea
-              className="card-edit-textarea"
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              autoFocus
-              aria-label={`Edit ${label}`}
-            />
-            <div className="sr-field">
-              <label className="sr-field-label">Tags</label>
-              <input
-                className="sr-field-input"
-                value={tagDraft}
-                onChange={(e) => setTagDraft(e.target.value)}
-                placeholder="auth, security, mvp"
-              />
-            </div>
-            <div className="card-actions">
-              <button
-                className="btn btn-primary"
-                onClick={() => onSave({ content: draft, tags: parseTagsInput(tagDraft) })}
-                disabled={!draft.trim()}
-              >
-                Save
-              </button>
-              <button className="btn btn-ghost" onClick={onCancelEdit}>
-                Cancel
-              </button>
-            </div>
-          </>
+          <GeneralEditForm item={item} labelOptions={labelOptions} onSave={onSave} onCancel={onCancelEdit} onAddCustomLabel={onAddCustomLabel} />
         )}
       </div>
     );
@@ -365,12 +478,8 @@ export function RequirementCard({
         >
           ⠿
         </span>
-        <span className="card-label">{label}</span>
-        {isSR && item.priority && (
-          <span className={`priority-badge priority-${item.priority.toLowerCase()}`} title={item.priority === "R" ? "Required" : "Optional"}>
-            {item.priority}
-          </span>
-        )}
+        <span className="item-label">{label}</span>
+        <span className={`item-status ${status === "needs review" ? "warning" : ""}`} style={{ marginLeft: "auto", flexShrink: 0 }}>{status}</span>
         <div className="card-badges">
           {linkCount > 0 && (
             <span className="badge badge-link" title={`${linkCount} link${linkCount !== 1 ? "s" : ""}`}>
@@ -384,14 +493,12 @@ export function RequirementCard({
           )}
         </div>
       </div>
+      <CardAttributeRow item={item} warnings={warnings} linkCount={linkCount} />
 
       {isSR ? (
         <SRView item={item} />
       ) : (
-        <>
-          <div className="card-content">{item.content}</div>
-          <TagChips tags={item.tags} />
-        </>
+        <div className="card-content">{item.content}</div>
       )}
 
       <div className="card-actions">

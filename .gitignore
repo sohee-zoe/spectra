@@ -156,5 +156,7 @@ vite.config.ts.timestamp-*
 # 
 .claude/
 .omc/
+docs/
+scripts/
 AGENTS.md
 CLAUDE.md

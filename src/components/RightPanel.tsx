@@ -6,6 +6,15 @@ import type {
   TraceabilityWarning,
 } from "../domain/types";
 import { LinkEditor } from "./LinkEditor";
+import { MarkdownView } from "./MarkdownView";
+import {
+  chipClassName,
+  getItemAttributeChips,
+  getItemTagChips,
+  getItemTitle,
+  getStatusLabel,
+} from "./reviewPresentation";
+import { getLabel } from "../domain/projectHelpers";
 
 type Props = {
   warnings: TraceabilityWarning[];
@@ -69,23 +78,56 @@ export function RightPanel({
   return (
     <aside 
       className="right-panel" 
-      aria-label="Traceability panel"
+      aria-label="Document detail"
       style={{ width: `${width}px` }}
     >
       <div 
         className="panel-resizer" 
         onMouseDown={startResizing} 
       />
-      <div className="panel-section" style={{ maxHeight: "40%", flex: "0 0 auto" }}>
+      <div className="panel-section document-detail-section" style={{ flex: "0 0 auto" }}>
+        <div className="workspace-panel-header panel-section-header document-detail-header" style={{ gap: 8 }}>
+          <h2 className="workspace-panel-title" style={{ flex: 1 }}>Document Detail</h2>
+          {selectedItem && <span className={`item-status ${getStatusLabel(selectedItem, warnings) === 'needs review' ? 'warning' : ''}`}>{getStatusLabel(selectedItem, warnings)}</span>}
+        </div>
+        <div className="panel-section-body">
+          {selectedItem ? (
+            <div className="detail-card">
+              <div className="item-label" style={{ marginBottom: 4 }}>{getLabel(selectedItem)}</div>
+              <h2>{getItemTitle(selectedItem)}</h2>
+              <div className="detail-attributes">
+                {getItemAttributeChips(selectedItem, warnings, links).map((chip) => (
+                  <span key={chip.label} className={chipClassName(chip)}>{chip.label}</span>
+                ))}
+              </div>
+              <div className="detail-field">
+                <span className="detail-field-label">Description</span>
+                <MarkdownView content={selectedItem.content} />
+              </div>
+              {selectedItem.tags && selectedItem.tags.length > 0 && (
+                <div className="detail-tags">
+                  {getItemTagChips(selectedItem).map((chip) => (
+                    <span key={chip.label} className={chipClassName(chip)}>{chip.label}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="no-selection">Select an item to review document detail</div>
+          )}
+        </div>
+      </div>
+
+      <div className="panel-section" style={{ maxHeight: "30%", flex: "0 0 auto" }}>
         <div className="panel-section-header">
-          <span>Warnings</span>
+          <span>Review Issues</span>
           {warnings.length > 0 && (
             <span className="warning-badge">{warnings.length}</span>
           )}
         </div>
         <div className="panel-section-body">
           {warnings.length === 0 ? (
-            <div className="no-warnings">No traceability warnings</div>
+            <div className="no-warnings">No review issues</div>
           ) : (
             warnings.map((w) => (
               <div
@@ -108,7 +150,7 @@ export function RightPanel({
 
       <div className="panel-section">
         <div className="panel-section-header">
-          <span>Links</span>
+          <span>Trace Links</span>
         </div>
         <div className="panel-section-body">
           {selectedItem ? (
@@ -120,7 +162,7 @@ export function RightPanel({
               onRemoveLink={onRemoveLink}
             />
           ) : (
-            <div className="no-selection">Select an item to manage links</div>
+            <div className="no-selection">Select an item to manage trace links</div>
           )}
         </div>
       </div>

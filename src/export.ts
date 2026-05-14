@@ -110,7 +110,7 @@ function markdownTableCell(value: string): string {
 
 function formatTags(tags?: string[]): string | null {
   if (!tags || tags.length === 0) return null;
-  return `Tags: ${tags.map((tag) => `\`${tag}\``).join(", ")}`;
+  return `Labels: ${tags.map((tag) => `\`${tag}\``).join(", ")}`;
 }
 
 export function projectToMarkdown(data: ProjectData): string {
@@ -212,6 +212,20 @@ export function projectToMarkdown(data: ProjectData): string {
         lines.push("```");
         lines.push(sr.payload);
         lines.push("```");
+        lines.push("");
+      }
+
+      if (sr.acceptanceCriteria) {
+        lines.push("**Acceptance Criteria:**");
+        lines.push("");
+        lines.push(sr.acceptanceCriteria);
+        lines.push("");
+      }
+
+      if (sr.constraints) {
+        lines.push("**Constraints / Notes:**");
+        lines.push("");
+        lines.push(sr.constraints);
         lines.push("");
       }
 
@@ -356,6 +370,13 @@ export function validateProjectData(raw: unknown): ImportResult {
       !isString(i.content) ||
       !isString(i.createdAt) ||
       !isString(i.updatedAt) ||
+      (i.reviewStatus !== undefined &&
+        !["stable", "approved", "needs review", "in review"].includes(i.reviewStatus as string)) ||
+      (i.reporter !== undefined && !isString(i.reporter)) ||
+      (i.acceptanceCriteria !== undefined && !isString(i.acceptanceCriteria)) ||
+      (i.constraints !== undefined && !isString(i.constraints)) ||
+      (i.owner !== undefined && !isString(i.owner)) ||
+      (i.verificationStatus !== undefined && !isString(i.verificationStatus)) ||
       (i.tags !== undefined &&
         (!Array.isArray(i.tags) || !i.tags.every((tag) => isString(tag))))
     ) {

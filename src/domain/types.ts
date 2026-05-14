@@ -2,27 +2,44 @@ export type RequirementType = "UR" | "SR" | "FEATURE";
 
 export type RequirementPriority = "R" | "O";
 
+export type RequirementReviewStatus = "stable" | "approved" | "needs review" | "in review";
+
 /** Editable fields shared between add and edit flows */
 export type ItemEditFields = {
   content: string;       // Description
   name?: string;         // SR display name
+  reviewStatus?: RequirementReviewStatus;
+  reporter?: string;
   priority?: RequirementPriority;
-  protocol?: string;     // Communication protocol (e.g. REST, gRPC)
-  dataFormat?: string;   // Data format (e.g. JSON, Protobuf)
-  payload?: string;      // Payload schema or description
+  protocol?: string;     // Legacy API-oriented field kept for imported YAML compatibility
+  dataFormat?: string;   // Legacy API-oriented field kept for imported YAML compatibility
+  payload?: string;      // Legacy API-oriented field kept for imported YAML compatibility
+  acceptanceCriteria?: string;
+  constraints?: string;
+  owner?: string;
+  verificationStatus?: string;
   tags?: string[];        // Searchable labels shared by UR/SR/Feature
+  customPrefix?: string;  // Custom ID prefix (e.g. "ORD" for UR-ORD-01)
 };
 
 export type RequirementItem = {
   id: string;
   type: RequirementType;
   index: number;
+  domainIndex?: number;
   content: string;
   name?: string;
+  customPrefix?: string;
+  reviewStatus?: RequirementReviewStatus;
+  reporter?: string;
   priority?: RequirementPriority;
   protocol?: string;
   dataFormat?: string;
   payload?: string;
+  acceptanceCriteria?: string;
+  constraints?: string;
+  owner?: string;
+  verificationStatus?: string;
   tags?: string[];
   createdAt: string;
   updatedAt: string;

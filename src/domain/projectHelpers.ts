@@ -59,15 +59,23 @@ export function createItem(
     index: nextIndex(data.items, type),
     content: trimmed,
     name: extraFields?.name?.trim() || undefined,
+    customPrefix: extraFields?.customPrefix?.trim() || undefined,
+    reviewStatus: extraFields?.reviewStatus,
+    reporter: extraFields?.reporter?.trim() || undefined,
     priority: extraFields?.priority,
     protocol: extraFields?.protocol?.trim() || undefined,
     dataFormat: extraFields?.dataFormat?.trim() || undefined,
     payload: extraFields?.payload?.trim() || undefined,
+    acceptanceCriteria: extraFields?.acceptanceCriteria?.trim() || undefined,
+    constraints: extraFields?.constraints?.trim() || undefined,
+    owner: extraFields?.owner?.trim() || undefined,
+    verificationStatus: extraFields?.verificationStatus?.trim() || undefined,
     tags: normalizeTags(extraFields?.tags),
     createdAt: now(),
     updatedAt: now(),
   };
-  return touch({ ...data, items: [...data.items, item] });
+  const newItems = [...data.items, item];
+  return touch({ ...data, items: recomputeIndexes(newItems, type) });
 }
 
 export function updateItemContent(
@@ -93,16 +101,27 @@ export function updateItemFields(
           ...i,
           content: fields.content.trim(),
           name: fields.name?.trim() || undefined,
+          customPrefix: fields.customPrefix?.trim() || undefined,
+          reviewStatus: fields.reviewStatus,
+          reporter: fields.reporter?.trim() || undefined,
           priority: fields.priority,
           protocol: fields.protocol?.trim() || undefined,
           dataFormat: fields.dataFormat?.trim() || undefined,
           payload: fields.payload?.trim() || undefined,
+          acceptanceCriteria: fields.acceptanceCriteria?.trim() || undefined,
+          constraints: fields.constraints?.trim() || undefined,
+          owner: fields.owner?.trim() || undefined,
+          verificationStatus: fields.verificationStatus?.trim() || undefined,
           tags: normalizeTags(fields.tags),
           updatedAt: now(),
         }
       : i
   );
-  return touch({ ...data, items });
+  
+  const targetItem = items.find(i => i.id === itemId);
+  const finalItems = targetItem ? recomputeIndexes(items, targetItem.type) : items;
+  
+  return touch({ ...data, items: finalItems });
 }
 
 export function recomputeIndexes(
@@ -110,9 +129,30 @@ export function recomputeIndexes(
   type: RequirementType
 ): RequirementItem[] {
   let idx = 1;
+  const domainCounters = new Map<string, number>();
+
   return items.map((i) => {
     if (i.type !== type) return i;
-    return { ...i, index: idx++ };
+    
+    // Calculate global index within type
+    const currentIndex = idx++;
+    
+    // Calculate per-domain index
+    let domain = "default";
+    if (i.customPrefix) {
+      domain = i.customPrefix.toUpperCase().replace(/^(UR|SR|FT)-?/, "");
+    } else {
+      const defaultPrefix = i.type === "FEATURE" ? "FT" : i.type;
+      const domainIdPattern = new RegExp(`^${defaultPrefix.toLowerCase()}-([a-z0-9]+)-[a-z0-9]+$`);
+      const match = i.id.toLowerCase().match(domainIdPattern);
+      if (match) {
+        domain = match[1].toUpperCase();
+      }
+    }
+    const currentDomainIdx = (domainCounters.get(domain) || 0) + 1;
+    domainCounters.set(domain, currentDomainIdx);
+
+    return { ...i, index: currentIndex, domainIndex: currentDomainIdx };
   });
 }
 
@@ -142,7 +182,7 @@ export function reorderItem(
   const clamped = Math.max(0, Math.min(newPosition, without.length));
   without.splice(clamped, 0, target);
 
-  const reindexed = without.map((i, idx) => ({ ...i, index: idx + 1 }));
+  const reindexed = recomputeIndexes(without, target.type);
   const merged = data.items
     .filter((i) => i.type !== target.type)
     .concat(reindexed)
@@ -205,8 +245,28 @@ export function removeLink(data: ProjectData, linkId: string): ProjectData {
 }
 
 export function getLabel(item: RequirementItem): string {
-  const prefix = item.type === "FEATURE" ? "FT" : item.type;
-  return `${prefix}-${item.index}`;
+  const defaultPrefix = item.type === "FEATURE" ? "FT" : item.type;
+  
+  let domainPart = item.customPrefix;
+  let usePadding = true;
+
+  if (!domainPart) {
+    const domainIdPattern = new RegExp(`^${defaultPrefix.toLowerCase()}-([a-z0-9]+)-[a-z0-9]+$`);
+    const match = item.id.toLowerCase().match(domainIdPattern);
+    if (match) {
+      domainPart = match[1].toUpperCase();
+    } else {
+      domainPart = "";
+      usePadding = false;
+    }
+  } else {
+    domainPart = domainPart.toUpperCase().replace(/^(UR|SR|FT)-?/, "");
+  }
+
+  const prefix = domainPart ? `${defaultPrefix}-${domainPart}` : defaultPrefix;
+  const suffixIndex = item.domainIndex ?? item.index;
+  const suffix = usePadding ? String(suffixIndex).padStart(2, "0") : suffixIndex;
+  return `${prefix}-${suffix}`;
 }
 
 export function validateTraceability(

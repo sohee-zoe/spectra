@@ -60,7 +60,6 @@ export function TopBar({
         <input
           type="text"
           className="topbar-search"
-          placeholder="Search..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           aria-label="Search items"
@@ -70,11 +69,11 @@ export function TopBar({
           <button
             className={`btn btn-ghost warning-filter-btn ${filterWarningOnly ? "active" : ""}`}
             onClick={() => onFilterWarningChange(!filterWarningOnly)}
-            aria-label="Filter by warnings"
+            aria-label="Filter by review issues"
             aria-pressed={filterWarningOnly}
           >
             <span className="warning-badge">
-              {warnings.length} warning{warnings.length !== 1 ? "s" : ""}
+              {warnings.length} issue{warnings.length !== 1 ? "s" : ""}
             </span>
           </button>
         )}
