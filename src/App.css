@@ -1301,3 +1301,69 @@ body {
     border-top: 1px solid var(--border);
   }
 }
+
+/* Markdown Editor */
+.markdown-editor {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--surface);
+}
+.markdown-editor-tabs {
+  display: flex;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+.markdown-editor-tabs .tab {
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-dim);
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--border);
+  cursor: pointer;
+}
+.markdown-editor-tabs .tab:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+.markdown-editor-tabs .tab.active {
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 700;
+}
+.markdown-editor .sr-field-input {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+.markdown-editor .sr-field-input:focus {
+  box-shadow: none;
+  outline: none;
+}
+.markdown-editor-preview {
+  padding: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text);
+  min-height: 100px;
+}
+
+/* Markdown specific tweaks in cards */
+.card-content .markdown-view {
+  white-space: normal;
+}
+.markdown-view p {
+  margin: 0 0 0.5em 0;
+}
+.markdown-view ul {
+  margin: 0.5em 0;
+  padding-left: 1.2em;
+}
+.markdown-view h2, .markdown-view h3, .markdown-view h4 {
+  margin: 0.8em 0 0.4em 0;
+  color: var(--accent);
+}

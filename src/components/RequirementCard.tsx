@@ -11,6 +11,7 @@ import type {
 import { getLabel } from "../domain/projectHelpers";
 import { chipClassName, getItemAttributeChips, getItemTagChips, getStatusLabel } from "./reviewPresentation";
 import { MarkdownView } from "./MarkdownView";
+import { MarkdownEditor } from "./MarkdownEditor";
 import { ChoiceOrAddField, LabelsField } from "./EditableChoiceFields";
 
 type Props = {
@@ -147,12 +148,7 @@ function SREditForm({
 
       <div className="sr-field">
         <label className="sr-field-label">Description</label>
-        <textarea
-          className="card-edit-textarea"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          autoFocus
-        />
+        <MarkdownEditor value={content} onChange={setContent} minRows={4} />
       </div>
 
       <StatusField value={reviewStatus} onChange={setReviewStatus} />
@@ -181,24 +177,12 @@ function SREditForm({
 
       <div className="sr-field">
         <label className="sr-field-label">Acceptance Criteria</label>
-        <textarea
-          className="sr-field-input"
-          value={acceptanceCriteria}
-          onChange={(e) => setAcceptanceCriteria(e.target.value)}
-          rows={3}
-          style={{ resize: "vertical" }}
-        />
+        <MarkdownEditor value={acceptanceCriteria} onChange={setAcceptanceCriteria} minRows={3} />
       </div>
 
       <div className="sr-field">
         <label className="sr-field-label">Constraints / Notes</label>
-        <textarea
-          className="sr-field-input"
-          value={constraints}
-          onChange={(e) => setConstraints(e.target.value)}
-          rows={2}
-          style={{ resize: "vertical" }}
-        />
+        <MarkdownEditor value={constraints} onChange={setConstraints} minRows={2} />
       </div>
 
       <LabelsField value={tags} options={labelOptions} onChange={setTags} onAddCustom={onAddCustomLabel} />
@@ -276,13 +260,7 @@ function GeneralEditForm({
 
       <div className="sr-field">
         <label className="sr-field-label">Description</label>
-        <textarea
-          className="card-edit-textarea"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          autoFocus
-          aria-label={`Edit ${getLabel(item)}`}
-        />
+        <MarkdownEditor value={content} onChange={setContent} minRows={4} />
       </div>
 
       <StatusField value={reviewStatus} onChange={setReviewStatus} />
@@ -351,7 +329,9 @@ function SRView({ item }: { item: RequirementItem }) {
   return (
     <>
       {item.name && <div className="sr-name">{item.name}</div>}
-      <div className="card-content">{item.content}</div>
+      <div className="card-content">
+        <MarkdownView content={item.content} />
+      </div>
       {item.acceptanceCriteria && (
         <div className="sr-review-block">
           <div className="sr-review-block-title">Acceptance Criteria</div>
@@ -446,7 +426,9 @@ export function RequirementCard({
         <div className="card-header">
           <span className="card-label">{label}</span>
         </div>
-        <div className="card-content">{item.content}</div>
+        <div className="card-content">
+          <MarkdownView content={item.content} />
+        </div>
         <div className="card-confirm">Delete {label}?</div>
         <div className="card-confirm-actions">
           <button className="btn btn-danger" onClick={onConfirmDelete}>Delete</button>
@@ -498,7 +480,9 @@ export function RequirementCard({
       {isSR ? (
         <SRView item={item} />
       ) : (
-        <div className="card-content">{item.content}</div>
+        <div className="card-content">
+          <MarkdownView content={item.content} />
+        </div>
       )}
 
       <div className="card-actions">
