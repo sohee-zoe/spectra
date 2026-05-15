@@ -397,76 +397,7 @@ function App() {
     );
   }, [visibleItems, data.links]);
 
-  // ── SVG connector paths (responsive via ResizeObserver) ───────────────────
   const workspaceRef = useRef<HTMLDivElement>(null);
-  const columnsRef = useRef<HTMLDivElement>(null);
-  const [connectorPaths, setConnectorPaths] = useState<string[]>([]);
-
-  const recomputePaths = useCallback(() => {
-    if (!workspaceRef.current || !selectedId || connectedIds.size === 0) {
-      setConnectorPaths([]);
-      return;
-    }
-    const workspace = workspaceRef.current;
-    const wRect = workspace.getBoundingClientRect();
-
-    const getCenter = (id: string) => {
-      const el = workspace.querySelector<HTMLElement>(`[data-item-id="${id}"]`);
-      if (!el) return null;
-      const r = el.getBoundingClientRect();
-      if (r.bottom < wRect.top || r.top > wRect.bottom) return null;
-      return {
-        left: r.left - wRect.left,
-        right: r.right - wRect.left,
-        centerY: r.top - wRect.top + r.height / 2,
-      };
-    };
-
-    const activeNodes = new Set([...connectedIds, selectedId]);
-    const paths: string[] = [];
-    
-    for (const link of visibleLinks) {
-      if (!activeNodes.has(link.sourceId) || !activeNodes.has(link.targetId)) continue;
-      
-      const s = getCenter(link.sourceId);
-      const t = getCenter(link.targetId);
-      if (!s || !t) continue;
-      
-      const toRight = s.right < t.left;
-      const x1 = toRight ? s.right : s.left;
-      const x2 = toRight ? t.left : t.right;
-      const y1 = s.centerY;
-      const y2 = t.centerY;
-      
-      // Use exact midpoint for control points to prevent overlapping backwards loops (squiggly lines)
-      const midX = x1 + (x2 - x1) / 2;
-      paths.push(
-        `M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`
-      );
-    }
-    setConnectorPaths(paths);
-  }, [selectedId, connectedIds]);
-
-  // Recompute when selection / data changes
-  useEffect(() => {
-    const raf = requestAnimationFrame(recomputePaths);
-    return () => cancelAnimationFrame(raf);
-  }, [selectedId, connectedIds, data.items, recomputePaths]);
-
-  // Recompute on window / workspace resize (responsive lines)
-  useEffect(() => {
-    const observer = new ResizeObserver(() => requestAnimationFrame(recomputePaths));
-    if (workspaceRef.current) observer.observe(workspaceRef.current);
-    if (columnsRef.current) observer.observe(columnsRef.current);
-
-    // Also handle window resize for good measure
-    window.addEventListener("resize", recomputePaths);
-
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", recomputePaths);
-    };
-  }, [recomputePaths]);
 
   return (
     <div className="app">
@@ -501,22 +432,6 @@ function App() {
         onDragEnd={handleDragEnd}
       >
         <div className="workspace" ref={workspaceRef} onClick={handleWorkspaceClick}>
-          {/* SVG connector overlay — plain bezier lines, no arrows */}
-          {viewMode === "list" && connectorPaths.length > 0 && (
-            <svg className="connector-svg" aria-hidden="true">
-              {connectorPaths.map((d) => (
-                <path
-                  key={d}
-                  d={d}
-                  fill="none"
-                  stroke="var(--link-color)"
-                  strokeWidth="1.5"
-                  strokeOpacity="0.65"
-                />
-              ))}
-            </svg>
-          )}
-
           {viewMode === "list" ? (
             <div
               className="review-workspace"
@@ -544,7 +459,7 @@ function App() {
                   <h2 className="workspace-panel-title">Trace Board</h2>
                   <span className="workspace-panel-count">{visibleLinks.length} links</span>
                 </div>
-                <div className="columns" ref={columnsRef}>
+                <div className="columns">
                   {COLUMNS.map((type) => (
                     <RequirementColumn
                       key={type}
