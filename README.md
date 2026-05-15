@@ -5,6 +5,7 @@ Spectra는 엔지니어링 프로젝트의 **사용자 요구사항(UR)**, **시
 복잡한 요구사항 간의 연결 고리를 한눈에 파악하고, 누락된 추적성(Traceability Gap)을 실시간으로 감지하여 프로젝트의 정합성을 유지하도록 돕습니다.
 
 **Live App**: https://spectra-pied.vercel.app
+
 **Live Demo Dataset**: https://spectra-pied.vercel.app/demo
 
 ## Demo
