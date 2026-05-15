@@ -110,6 +110,18 @@ export function RightPanel({
                 <span className="detail-field-label">Description</span>
                 <MarkdownView content={selectedItem.content} />
               </div>
+              {selectedItem.acceptanceCriteria && (
+                <div className="detail-field">
+                  <span className="detail-field-label">Acceptance Criteria</span>
+                  <MarkdownView content={selectedItem.acceptanceCriteria} />
+                </div>
+              )}
+              {selectedItem.constraints && (
+                <div className="detail-field">
+                  <span className="detail-field-label">Constraints / Notes</span>
+                  <MarkdownView content={selectedItem.constraints} />
+                </div>
+              )}
               {selectedItem.tags && selectedItem.tags.length > 0 && (
                 <div className="detail-tags">
                   {getItemTagChips(selectedItem).map((chip) => (

@@ -14,7 +14,6 @@ import '@xyflow/react/dist/style.css';
 import type { RequirementItem, RequirementLink } from '../domain/types';
 import { getLabel } from '../domain/projectHelpers';
 import { getStatusLabel, getItemAttributeChips, getItemTagChips, chipClassName } from './reviewPresentation';
-import { MarkdownView } from './MarkdownView';
 
 type Props = {
   items: RequirementItem[];
@@ -42,7 +41,7 @@ function nodeLabel(item: RequirementItem, links: RequirementLink[]) {
         </div>
       )}
       <div style={{ marginTop: 5, fontSize: '12px', color: 'var(--text-dim)', whiteSpace: 'normal', overflowWrap: 'anywhere' }}>
-        <MarkdownView content={item.content} />
+        {item.content}
       </div>
       {(attrChips.length > 0 || tagChips.length > 0) && (
         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 8 }}>

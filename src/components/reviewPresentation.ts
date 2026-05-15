@@ -59,8 +59,8 @@ export function getItemAttributeChips(
   if (item.type === "UR") {
     if (item.reporter) chips.push({ label: item.reporter, kind: "default" });
   } else if (item.type === "SR") {
-    if (item.priority === "R") chips.push({ label: "Priority Required", kind: "error" });
-    else if (item.priority === "O") chips.push({ label: "Priority Optional", kind: "default" });
+    if (item.priority === "R") chips.push({ label: "Required", kind: "error" });
+    else if (item.priority === "O") chips.push({ label: "Optional", kind: "default" });
     const lc = getLinkCount(item, links);
     chips.push(
       lc > 0
@@ -68,7 +68,7 @@ export function getItemAttributeChips(
         : { label: "No links", kind: "default" }
     );
   } else {
-    if (item.owner) chips.push({ label: `Owner ${item.owner}`, kind: "default" });
+    if (item.owner) chips.push({ label: item.owner, kind: "default" });
     if (item.verificationStatus) {
       const v = item.verificationStatus.toLowerCase();
       let kind: ItemChip["kind"] = "default";

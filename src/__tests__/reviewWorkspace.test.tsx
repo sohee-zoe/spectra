@@ -37,8 +37,7 @@ describe("review workspace", () => {
 
     expect(screen.getAllByText("stable").length).toBeGreaterThan(0);
     expect(screen.queryByText(/Reporter Sample/)).not.toBeInTheDocument();
-    expect(screen.getAllByText("Priority Required").length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/^Owner /).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Required").length).toBeGreaterThan(0);
   });
 
   it("allows editing an item's status", () => {

@@ -1068,7 +1068,7 @@ body {
 
 .detail-card h2 {
   color: var(--text);
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 600;
   line-height: 1.25;
   margin-top: 4px;
@@ -1092,7 +1092,7 @@ body {
 .detail-field-label {
   color: var(--text-dim);
   display: block;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -1169,9 +1169,9 @@ body {
 .warning-badge {
   background: var(--warning);
   color: #000;
-  font-size: 17px;
+  font-size: 13px;
   font-weight: 700;
-  padding: 2px 7px;
+  padding: 2px 6px;
   border-radius: 10px;
 }
 
@@ -1184,7 +1184,7 @@ body {
   padding: 5px 6px;
   border-radius: var(--radius);
   cursor: pointer;
-  font-size: 18px;
+  font-size: 14px;
 }
 
 .warning-row:hover {
@@ -1193,12 +1193,12 @@ body {
 
 .warning-icon {
   flex-shrink: 0;
-  font-size: 20px;
+  font-size: 14px;
   line-height: 1.4;
 }
 
 .warning-label-chip {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 700;
   background: var(--warning);
   color: #000;
@@ -1216,7 +1216,7 @@ body {
 
 .no-warnings {
   color: var(--text-dim);
-  font-size: 18px;
+  font-size: 14px;
   padding: 8px 4px;
   text-align: center;
 }
@@ -1228,8 +1228,8 @@ body {
 }
 
 .link-section-title {
-  font-size: 17px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
   color: var(--text-dim);
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -1243,7 +1243,7 @@ body {
   padding: 4px 6px;
   border-radius: var(--radius);
   cursor: pointer;
-  font-size: 18px;
+  font-size: 14px;
 }
 
 .link-option:hover {
@@ -1272,7 +1272,7 @@ body {
 
 .no-selection {
   color: var(--text-dim);
-  font-size: 18px;
+  font-size: 14px;
   padding: 8px 4px;
   text-align: center;
 }
