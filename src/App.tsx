@@ -218,16 +218,27 @@ function App() {
   useEffect(() => { dataItemsRef.current = data.items; });
 
   useEffect(() => {
+    let timerId: ReturnType<typeof setTimeout> | null = null;
+
     const handler = (e: BeforeUnloadEvent) => {
       if (dataItemsRef.current.length === 0) return;
       e.preventDefault();
       e.returnValue = '';
-      // setTimeout fires after native dialog closes (JS is blocked during dialog).
-      // If user clicks Leave, page unloads and this never runs.
-      setTimeout(() => setShowExitModal(true), 0);
+      timerId = setTimeout(() => setShowExitModal(true), 0);
     };
+
+    // pagehide fires when page actually navigates (Leave or browser-suppressed dialog).
+    // Cancel the timer so modal doesn't flash during unload.
+    const onPageHide = () => {
+      if (timerId !== null) clearTimeout(timerId);
+    };
+
     window.addEventListener("beforeunload", handler);
-    return () => window.removeEventListener("beforeunload", handler);
+    window.addEventListener("pagehide", onPageHide);
+    return () => {
+      window.removeEventListener("beforeunload", handler);
+      window.removeEventListener("pagehide", onPageHide);
+    };
   }, []);
 
   // ── Add ───────────────────────────────────────────────────────────────────
