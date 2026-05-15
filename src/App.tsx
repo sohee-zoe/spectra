@@ -214,22 +214,40 @@ function App() {
     };
   }, []);
 
-  const dataItemsRef = useRef(data.items);
-  useEffect(() => { dataItemsRef.current = data.items; });
+  const initialDataRef = useRef(data);
+  const currentDataRef = useRef(data);
+  useEffect(() => { currentDataRef.current = data; }, [data]);
 
+  // Ctrl+R / Cmd+R / F5: intercept keyboard refresh before Chrome blocks beforeunload
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const isRefresh =
+        (e.key === 'F5') ||
+        ((e.ctrlKey || e.metaKey) && e.key === 'r');
+      if (!isRefresh) return;
+      if (currentDataRef.current === initialDataRef.current) return;
+      e.preventDefault();
+      setShowExitModal(true);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
+  // Tab/window close: beforeunload (Chrome may suppress, best-effort)
   useEffect(() => {
     let timerId: ReturnType<typeof setTimeout> | null = null;
+    let shouldShow = false;
 
     const handler = (e: BeforeUnloadEvent) => {
-      if (dataItemsRef.current.length === 0) return;
+      if (currentDataRef.current === initialDataRef.current) return;
       e.preventDefault();
-      e.returnValue = '';
-      timerId = setTimeout(() => setShowExitModal(true), 0);
+      e.returnValue = 'unsaved';
+      shouldShow = true;
+      timerId = setTimeout(() => { if (shouldShow) setShowExitModal(true); }, 150);
     };
 
-    // pagehide fires when page actually navigates (Leave or browser-suppressed dialog).
-    // Cancel the timer so modal doesn't flash during unload.
     const onPageHide = () => {
+      shouldShow = false;
       if (timerId !== null) clearTimeout(timerId);
     };
 

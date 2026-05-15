@@ -11,6 +11,7 @@ import type {
 } from "../domain/types";
 import { RequirementCard } from "./RequirementCard";
 import { ChoiceOrAddField, LabelsField } from "./EditableChoiceFields";
+import { MarkdownEditor } from "./MarkdownEditor";
 
 type Props = {
   type: RequirementType;
@@ -63,6 +64,7 @@ function SRAddForm({
   onAddCustomLabel: (label: string) => void;
 }) {
   const [name, setName] = useState("");
+  const [customPrefix, setCustomPrefix] = useState("");
   const [reviewStatus, setReviewStatus] = useState<RequirementReviewStatus | undefined>("approved");
   const [priority, setPriority] = useState<RequirementPriority | undefined>(undefined);
   const [acceptanceCriteria, setAcceptanceCriteria] = useState("");
@@ -75,11 +77,11 @@ function SRAddForm({
   }
 
   const nameId = useId();
-  const acId = useId();
-  const constraintsId = useId();
+  const domainId = useId();
+  const statusId = useId();
 
   return (
-    <div className="add-form sr-edit-form">
+    <div className="add-form sr-edit-form" onKeyDown={(e) => e.stopPropagation()}>
       <div className="sr-field">
         <label className="sr-field-label" htmlFor={nameId}>Name</label>
         <input
@@ -89,6 +91,37 @@ function SRAddForm({
           onChange={(e) => setName(e.target.value)}
           autoFocus
         />
+      </div>
+
+      <div className="sr-field">
+        <label className="sr-field-label" htmlFor={domainId}>Domain (for ID)</label>
+        <input
+          id={domainId}
+          className="sr-field-input"
+          value={customPrefix}
+          onChange={(e) => setCustomPrefix(e.target.value)}
+          placeholder="e.g. ORD, AUTH"
+        />
+      </div>
+
+      <div className="sr-field">
+        <div className="sr-field-label">Description</div>
+        <MarkdownEditor value={content} onChange={setContent} minRows={6} />
+      </div>
+
+      <div className="sr-field">
+        <label className="sr-field-label" htmlFor={statusId}>Status</label>
+        <select
+          id={statusId}
+          className="sr-field-input"
+          value={reviewStatus ?? ""}
+          onChange={(e) => setReviewStatus((e.target.value || undefined) as RequirementReviewStatus | undefined)}
+        >
+          <option value="">Auto</option>
+          {STATUS_OPTIONS.map((status) => (
+            <option key={status} value={status}>{status}</option>
+          ))}
+        </select>
       </div>
 
       <div className="sr-field">
@@ -114,68 +147,25 @@ function SRAddForm({
       </div>
 
       <div className="sr-field">
-        <div className="sr-field-label">Status</div>
-        <select
-          className="sr-field-input"
-          aria-label="Status"
-          value={reviewStatus ?? ""}
-          onChange={(e) => setReviewStatus((e.target.value || undefined) as RequirementReviewStatus | undefined)}
-        >
-          <option value="">Auto</option>
-          {STATUS_OPTIONS.map((status) => (
-            <option key={status} value={status}>
-              {status}
-            </option>
-          ))}
-        </select>
+        <div className="sr-field-label">Acceptance Criteria</div>
+        <MarkdownEditor value={acceptanceCriteria} onChange={setAcceptanceCriteria} minRows={3} />
       </div>
 
       <div className="sr-field">
-        <label className="sr-field-label" htmlFor={acId}>Acceptance Criteria</label>
-        <textarea
-          id={acId}
-          className="sr-field-input"
-          value={acceptanceCriteria}
-          onChange={(e) => setAcceptanceCriteria(e.target.value)}
-          rows={3}
-          style={{ resize: "vertical" }}
-        />
-      </div>
-
-      <div className="sr-field">
-        <label className="sr-field-label" htmlFor={constraintsId}>Constraints / Notes</label>
-        <textarea
-          id={constraintsId}
-          className="sr-field-input"
-          value={constraints}
-          onChange={(e) => setConstraints(e.target.value)}
-          rows={2}
-          style={{ resize: "vertical" }}
-        />
+        <div className="sr-field-label">Constraints / Notes</div>
+        <MarkdownEditor value={constraints} onChange={setConstraints} minRows={2} />
       </div>
 
       <LabelsField value={tags} options={labelOptions} onChange={setTags} onAddCustom={onAddCustomLabel} />
 
-      <div className="sr-field">
-        <div className="sr-field-label">Description</div>
-        <textarea
-          className="add-form-textarea"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          aria-label="New SR description"
-        />
-      </div>
-
-      <div className="add-form-actions">
-        <button className="btn btn-ghost" onClick={onCancel}>
-          Cancel
-        </button>
+      <div className="card-actions">
         <button
           className="btn btn-primary"
           onClick={() =>
             onAdd({
               content,
               name: name.trim() || undefined,
+              customPrefix: customPrefix.trim() || undefined,
               reviewStatus,
               priority,
               acceptanceCriteria: acceptanceCriteria.trim() || undefined,
@@ -187,6 +177,7 @@ function SRAddForm({
         >
           Add
         </button>
+        <button className="btn btn-ghost" onClick={onCancel}>Cancel</button>
       </div>
     </div>
   );
@@ -208,6 +199,7 @@ function GeneralAddForm({
   onAddCustomLabel: (label: string) => void;
 }) {
   const [name, setName] = useState("");
+  const [customPrefix, setCustomPrefix] = useState("");
   const [reviewStatus, setReviewStatus] = useState<RequirementReviewStatus | undefined>(
     type === "UR" ? "stable" : "in review"
   );
@@ -217,25 +209,14 @@ function GeneralAddForm({
   const [tags, setTags] = useState<string[]>([]);
   const [content, setContent] = useState("");
 
-  function handleAdd() {
-    if (!content.trim()) return;
-    onAdd({
-      content,
-      name: name.trim() || undefined,
-      reviewStatus,
-      reporter: reporter.trim() || undefined,
-      owner: owner.trim() || undefined,
-      verificationStatus: verificationStatus.trim() || undefined,
-      tags: tags.length > 0 ? tags : undefined,
-    });
-  }
-
   const nameId = useId();
+  const domainId = useId();
+  const statusId = useId();
   const reporterId = useId();
   const ownerId = useId();
 
   return (
-    <div className="add-form sr-edit-form">
+    <div className="add-form sr-edit-form" onKeyDown={(e) => e.stopPropagation()}>
       <div className="sr-field">
         <label className="sr-field-label" htmlFor={nameId}>Name</label>
         <input
@@ -248,28 +229,32 @@ function GeneralAddForm({
       </div>
 
       <div className="sr-field">
-        <div className="sr-field-label">Description</div>
-        <textarea
-          className="add-form-textarea"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          aria-label={`New ${label} content`}
+        <label className="sr-field-label" htmlFor={domainId}>Domain (for ID)</label>
+        <input
+          id={domainId}
+          className="sr-field-input"
+          value={customPrefix}
+          onChange={(e) => setCustomPrefix(e.target.value)}
+          placeholder="e.g. ORD, AUTH"
         />
       </div>
 
       <div className="sr-field">
-        <div className="sr-field-label">Status</div>
+        <div className="sr-field-label">Description</div>
+        <MarkdownEditor value={content} onChange={setContent} minRows={6} />
+      </div>
+
+      <div className="sr-field">
+        <label className="sr-field-label" htmlFor={statusId}>Status</label>
         <select
+          id={statusId}
           className="sr-field-input"
-          aria-label="Status"
           value={reviewStatus ?? ""}
           onChange={(e) => setReviewStatus((e.target.value || undefined) as RequirementReviewStatus | undefined)}
         >
           <option value="">Auto</option>
           {STATUS_OPTIONS.map((status) => (
-            <option key={status} value={status}>
-              {status}
-            </option>
+            <option key={status} value={status}>{status}</option>
           ))}
         </select>
       </div>
@@ -287,8 +272,8 @@ function GeneralAddForm({
       )}
 
       {type === "FEATURE" && (
-        <div className="sr-field-row">
-          <div className="sr-field sr-field-half">
+        <>
+          <div className="sr-field">
             <label className="sr-field-label" htmlFor={ownerId}>Owner</label>
             <input
               id={ownerId}
@@ -302,18 +287,32 @@ function GeneralAddForm({
             value={verificationStatus}
             onChange={setVerificationStatus}
           />
-        </div>
+        </>
       )}
 
       <LabelsField value={tags} options={labelOptions} onChange={setTags} onAddCustom={onAddCustomLabel} />
 
-      <div className="add-form-actions">
-        <button className="btn btn-ghost" onClick={onCancel}>
-          Cancel
+      <div className="card-actions">
+        <button
+          className="btn btn-primary"
+          onClick={() => {
+            if (!content.trim()) return;
+            onAdd({
+              content,
+              name: name.trim() || undefined,
+              customPrefix: customPrefix.trim() || undefined,
+              reviewStatus,
+              reporter: reporter.trim() || undefined,
+              owner: owner.trim() || undefined,
+              verificationStatus: verificationStatus.trim() || undefined,
+              tags: tags.length > 0 ? tags : undefined,
+            });
+          }}
+          disabled={!content.trim()}
+        >
+          Add {label}
         </button>
-        <button className="btn btn-primary" onClick={handleAdd} disabled={!content.trim()}>
-          Add
-        </button>
+        <button className="btn btn-ghost" onClick={onCancel}>Cancel</button>
       </div>
     </div>
   );
