@@ -18,6 +18,7 @@ import type {
 } from "./domain/types";
 import {
   createItem,
+  createEmptyProject,
   updateItemFields,
   deleteItem,
   reorderItem,
@@ -26,6 +27,7 @@ import {
   validateTraceability,
   getLabel,
 } from "./domain/projectHelpers";
+import { demoProjectData } from "./domain/demoData";
 import { TopBar } from "./components/TopBar";
 import { RequirementColumn } from "./components/RequirementColumn";
 import { RightPanel } from "./components/RightPanel";
@@ -39,27 +41,22 @@ import {
   validateProjectData,
 } from "./export";
 import type { ImportResult } from "./export";
+import { createExitWarningController } from "./exitWarning";
 
 // ── Local Storage ──────────────────────────────────────────────────────────
 
-const STORAGE_KEY = "spectra.requirements.v1";
+type AppMode = "workspace" | "demo";
 
-function emptyProject(): ProjectData {
-  return {
-    project: {
-      id: crypto.randomUUID(),
-      name: "새 프로젝트",
-      version: "1.0.0",
-      updatedAt: new Date().toISOString(),
-    },
-    items: [],
-    links: [],
-  };
+const STORAGE_KEY = "spectra.requirements.v1";
+const DEMO_STORAGE_KEY = "spectra.requirements.demo.v1";
+
+function getAppMode(pathname = window.location.pathname): AppMode {
+  return pathname === "/demo" ? "demo" : "workspace";
 }
 
-function loadFromStorage(): ProjectData {
+function loadFromStorage(storageKey: string, fallback: ProjectData): ProjectData {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(storageKey);
     if (raw) {
       const parsed = JSON.parse(raw) as ProjectData;
       const validated = validateProjectData(parsed);
@@ -70,7 +67,7 @@ function loadFromStorage(): ProjectData {
   } catch {
     // Corrupt data — fall through to empty project
   }
-  return emptyProject();
+  return fallback;
 }
 
 // ── UI state types ─────────────────────────────────────────────────────────
@@ -84,7 +81,10 @@ const COLUMNS: RequirementType[] = ["UR", "SR", "FEATURE"];
 // ── App ────────────────────────────────────────────────────────────────────
 
 function App() {
-  const [data, setData] = useState<ProjectData>(loadFromStorage);
+  const mode = getAppMode();
+  const storageKey = mode === "demo" ? DEMO_STORAGE_KEY : STORAGE_KEY;
+  const initialProject = mode === "demo" ? demoProjectData : createEmptyProject("새 프로젝트");
+  const [data, setData] = useState<ProjectData>(() => loadFromStorage(storageKey, initialProject));
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editing, setEditing] = useState<EditingState>(null);
   const [confirmDelete, setConfirmDelete] = useState<ConfirmDeleteState>(null);
@@ -109,13 +109,13 @@ function App() {
   // ── Persist to LocalStorage ───────────────────────────────────────────────
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      localStorage.setItem(storageKey, JSON.stringify(data));
       setStorageError(false);
       setLastSaved(new Date().toISOString());
     } catch {
       setStorageError(true);
     }
-  }, [data]);
+  }, [data, storageKey]);
 
   // ── Warnings ──────────────────────────────────────────────────────────────
   const warnings = useMemo(() => validateTraceability(data), [data]);
@@ -218,44 +218,21 @@ function App() {
   const currentDataRef = useRef(data);
   useEffect(() => { currentDataRef.current = data; }, [data]);
 
-  // Ctrl+R / Cmd+R / F5: intercept keyboard refresh before Chrome blocks beforeunload
   useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      const isRefresh =
-        (e.key === 'F5') ||
-        ((e.ctrlKey || e.metaKey) && e.key === 'r');
-      if (!isRefresh) return;
-      if (currentDataRef.current === initialDataRef.current) return;
-      e.preventDefault();
-      setShowExitModal(true);
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
+    const controller = createExitWarningController({
+      hasPendingChanges: () => currentDataRef.current !== initialDataRef.current,
+      showExitModal: () => setShowExitModal(true),
+    });
 
-  // Tab/window close: beforeunload (Chrome may suppress, best-effort)
-  useEffect(() => {
-    let timerId: ReturnType<typeof setTimeout> | null = null;
-    let shouldShow = false;
+    window.addEventListener("keydown", controller.handleKeyDown, true);
+    window.addEventListener("beforeunload", controller.handleBeforeUnload);
+    window.addEventListener("pagehide", controller.handlePageHide);
 
-    const handler = (e: BeforeUnloadEvent) => {
-      if (currentDataRef.current === initialDataRef.current) return;
-      e.preventDefault();
-      e.returnValue = 'unsaved';
-      shouldShow = true;
-      timerId = setTimeout(() => { if (shouldShow) setShowExitModal(true); }, 150);
-    };
-
-    const onPageHide = () => {
-      shouldShow = false;
-      if (timerId !== null) clearTimeout(timerId);
-    };
-
-    window.addEventListener("beforeunload", handler);
-    window.addEventListener("pagehide", onPageHide);
     return () => {
-      window.removeEventListener("beforeunload", handler);
-      window.removeEventListener("pagehide", onPageHide);
+      window.removeEventListener("keydown", controller.handleKeyDown, true);
+      window.removeEventListener("beforeunload", controller.handleBeforeUnload);
+      window.removeEventListener("pagehide", controller.handlePageHide);
+      controller.dispose();
     };
   }, []);
 
@@ -342,22 +319,7 @@ function App() {
   // ── Project Lifecycle ─────────────────────────────────────────────────────
   const handleNewProject = useCallback(() => {
     if (!window.confirm("모든 데이터를 삭제하고 새 프로젝트를 시작하시겠습니까?")) return;
-    
-    // Generate a simple unique ID as fallback for crypto.randomUUID
-    const newId = (globalThis.crypto && typeof globalThis.crypto.randomUUID === 'function')
-      ? globalThis.crypto.randomUUID()
-      : `project-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-
-    const newProject: ProjectData = {
-      project: {
-        id: newId,
-        name: "새 프로젝트",
-        version: "1.0.0",
-        updatedAt: new Date().toISOString(),
-      },
-      items: [],
-      links: [],
-    };
+    const newProject = createEmptyProject("새 프로젝트");
     setData(newProject);
     setSelectedId(null);
     setEditing(null);

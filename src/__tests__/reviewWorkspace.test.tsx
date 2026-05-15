@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import App from "../App";
 
 beforeEach(() => {
+  window.history.replaceState({}, "", "/");
   vi.stubGlobal("localStorage", {
     getItem: vi.fn(() => null),
     setItem: vi.fn(),
@@ -32,23 +33,23 @@ describe("review workspace", () => {
     expect(screen.getByRole("heading", { name: "Feature" })).toBeInTheDocument();
   });
 
-  it("shows status slots separately from attribute rows", () => {
+  it("starts with an empty project on the main route", () => {
     render(<App />);
 
-    expect(screen.getAllByText("stable").length).toBeGreaterThan(0);
-    expect(screen.queryByText(/Reporter Sample/)).not.toBeInTheDocument();
-    expect(screen.getAllByText("Required").length).toBeGreaterThan(0);
+    expect(screen.getByDisplayValue("새 프로젝트")).toBeInTheDocument();
+    expect(screen.getByText("0 items")).toBeInTheDocument();
+    expect(screen.getAllByText(/No .* items/).length).toBeGreaterThan(0);
   });
 
-  it("allows editing an item's status", () => {
+  it("loads the demo dataset on the demo route", () => {
+    window.history.replaceState({}, "", "/demo");
+
     render(<App />);
 
-    fireEvent.click(screen.getByRole("article", { name: "UR-ORD-01" }));
-    fireEvent.click(screen.getByLabelText("Edit UR-ORD-01"));
-    fireEvent.change(screen.getByLabelText("Status"), { target: { value: "approved" } });
-    fireEvent.click(screen.getByText("Save"));
-
-    expect(screen.getAllByText("approved").length).toBeGreaterThan(0);
+    expect(screen.getByDisplayValue("Release Readiness Tracker")).toBeInTheDocument();
+    expect(screen.getByRole("article", { name: /UR-REL-01/i })).toBeInTheDocument();
+    expect(screen.getByRole("article", { name: /SR-WF-01/i })).toBeInTheDocument();
+    expect(screen.getByRole("article", { name: /FT-API-01/i })).toBeInTheDocument();
   });
 
   it("collapses document outline categories", () => {

@@ -4,7 +4,8 @@ Spectra는 엔지니어링 프로젝트의 **사용자 요구사항(UR)**, **시
 
 복잡한 요구사항 간의 연결 고리를 한눈에 파악하고, 누락된 추적성(Traceability Gap)을 실시간으로 감지하여 프로젝트의 정합성을 유지하도록 돕습니다.
 
-**Live Demo**: https://spectra-pied.vercel.app
+**Live App**: https://spectra-pied.vercel.app
+**Live Demo Dataset**: https://spectra-pied.vercel.app/demo
 
 ## Demo
 
@@ -26,7 +27,7 @@ Spectra는 엔지니어링 프로젝트의 **사용자 요구사항(UR)**, **시
 - **Real-time Gap Detection**: 연결되지 않은 UR, 부모가 없는 SR 등 누락된 추적성 경고를 실시간으로 감지합니다.
 - **Tags & Metadata**: 우선순위, 프로토콜, 담당자, 검증 상태 등 상세 명세를 기록하고, 태그를 통해 도메인이나 영역별로 검색할 수 있습니다.
 - **Local-First & Export**: 서버나 로그인 없이 브라우저 단에서 즉시 동작하며, 프로젝트를 YAML, Markdown 리포트로 간편히 내보낼 수 있습니다.
-- **Save Reminder**: 탭을 닫거나 페이지를 벗어나려 할 때 저장 여부를 확인하는 경고창이 표시되며, 창 안에서 바로 YAML 및 Markdown 파일을 다운로드할 수 있습니다.
+- **Save Reminder**: 새로고침 단축키(`Ctrl/Cmd+R`, `F5`) 입력 시 저장 경고 모달을 띄우고, 브라우저 정책이 허용하는 범위에서는 탭/창 종료 시에도 native 경고를 시도합니다.
 
 ## How to Use
 
@@ -36,7 +37,7 @@ Spectra는 엔지니어링 프로젝트의 **사용자 요구사항(UR)**, **시
 4. **링크 연결**: 항목을 선택한 후 우측 `Trace Links` 패널에서 관련 문서를 연결합니다.
 5. **무결성 검증**: 우측 `Review Issues` 패널에서 추적성이 누락된 항목을 확인하고 바로 추적을 메울 수 있습니다.
 6. **풀 경로 시각화 (Traceability)**: 카드를 선택하면 연결된 모든 상/하위 카드가 보드에서는 테두리 강조로, 그래프에서는 엣지 하이라이트로 즉시 표시됩니다.
-7. **데이터 보존**: 작업 내용은 로컬 환경에 실시간 자동 저장되며, 언제든 백업용 YAML로 꺼낼 수 있습니다. 탭을 닫을 때 저장 알림 팝업이 표시되어 데이터 손실을 방지합니다.
+7. **데이터 보존**: 작업 내용은 로컬 환경에 실시간 자동 저장되며, 언제든 백업용 YAML로 꺼낼 수 있습니다. 새로고침 시 저장 경고 모달이 표시되고, 탭 종료 경고는 브라우저 정책에 따라 동작이 달라질 수 있습니다.
 
 ## Data & Privacy
 
@@ -63,6 +64,7 @@ npm run dev
 npm test
 npm run typecheck
 npm run build
+npx playwright test e2e/exit-warning.spec.ts
 ```
 
 ## Tech Stack
