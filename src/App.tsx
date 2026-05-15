@@ -214,11 +214,17 @@ function App() {
     };
   }, []);
 
+  const dataItemsRef = useRef(data.items);
+  useEffect(() => { dataItemsRef.current = data.items; });
+
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
+      if (dataItemsRef.current.length === 0) return;
       e.preventDefault();
       e.returnValue = '';
-      setShowExitModal(true);
+      // setTimeout fires after native dialog closes (JS is blocked during dialog).
+      // If user clicks Leave, page unloads and this never runs.
+      setTimeout(() => setShowExitModal(true), 0);
     };
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
