@@ -47,10 +47,12 @@ function StatusField({
   value: RequirementReviewStatus | undefined;
   onChange: (value: RequirementReviewStatus | undefined) => void;
 }) {
+  const selectId = useId();
   return (
     <div className="sr-field">
-      <label className="sr-field-label">Status</label>
+      <label className="sr-field-label" htmlFor={selectId}>Status</label>
       <select
+        id={selectId}
         className="sr-field-input"
         aria-label="Status"
         value={value ?? ""}

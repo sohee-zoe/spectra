@@ -32,10 +32,10 @@ function parseInline(text: string): InlinePart[] {
 function InlineMarkdown({ text }: { text: string }) {
   return (
     <>
-      {parseInline(text).map((part, index) => {
-        if (part.type === "strong") return <strong key={`strong-${index}`}>{part.value}</strong>;
-        if (part.type === "code") return <code key={`code-${index}`}>{part.value}</code>;
-        return <span key={`text-${index}`}>{part.value}</span>;
+      {parseInline(text).map((part) => {
+        if (part.type === "strong") return <strong key={`s-${part.value}`}>{part.value}</strong>;
+        if (part.type === "code") return <code key={`c-${part.value}`}>{part.value}</code>;
+        return <span key={`t-${part.value}`}>{part.value}</span>;
       })}
     </>
   );
@@ -62,8 +62,8 @@ export function MarkdownView({ content }: { content: string }) {
     if (list.length === 0) return;
     blocks.push(
       <ul key={`ul-${blocks.length}`}>
-        {list.map((item, index) => (
-          <li key={index}>
+        {list.map((item) => (
+          <li key={item}>
             <InlineMarkdown text={item} />
           </li>
         ))}

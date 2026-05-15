@@ -12,6 +12,11 @@
   --link-color: #8be9fd;
   --radius: 6px;
   --gap: 12px;
+  --text-xs: 11px;
+  --text-sm: 13px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: 21px;
 }
 
 [data-theme="light"] {
@@ -43,7 +48,7 @@ body {
     var(--bg);
   color: var(--text);
   font-family: system-ui, -apple-system, sans-serif;
-  font-size: 21px;
+  font-size: var(--text-base);
   line-height: 1.5;
 }
 
@@ -80,7 +85,7 @@ body {
   background: transparent;
   border: 1px solid transparent;
   color: var(--text);
-  font-size: 23px;
+  font-size: var(--text-xl);
   font-weight: 600;
   padding: 4px 8px;
   border-radius: var(--radius);
@@ -96,7 +101,7 @@ body {
 
 .topbar-status {
   color: var(--text-dim);
-  font-size: 18px;
+  font-size: var(--text-lg);
   flex: 1;
 }
 
@@ -110,7 +115,7 @@ body {
   background: var(--surface2);
   border: 1px solid var(--border);
   color: var(--text);
-  font-size: 20px;
+  font-size: var(--text-lg);
   padding: 4px 8px;
   border-radius: var(--radius);
   outline: none;
@@ -151,7 +156,7 @@ body {
   transform: translateX(-50%);
   background: var(--error);
   color: #fff;
-  font-size: 20px;
+  font-size: var(--text-lg);
   padding: 10px 18px;
   border-radius: var(--radius);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
@@ -173,7 +178,7 @@ body {
   border: 1px solid var(--border);
   background: var(--surface2);
   color: var(--text);
-  font-size: 20px;
+  font-size: var(--text-lg);
   cursor: pointer;
   transition: background 0.15s;
 }
@@ -212,7 +217,7 @@ body {
   border-color: transparent;
   color: var(--text-dim);
   padding: 4px 8px;
-  font-size: 18px;
+  font-size: var(--text-lg);
 }
 
 .btn-ghost:hover:not(:disabled) {
@@ -268,7 +273,7 @@ body {
 
 .workspace-panel-title {
   color: var(--text);
-  font-size: 17px;
+  font-size: var(--text-lg);
   font-weight: 700;
   line-height: 1.2;
   margin: 0;
@@ -282,7 +287,7 @@ body {
 .outline-group-count,
 .detail-status {
   color: var(--text-dim);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 700;
   white-space: nowrap;
 }
@@ -326,7 +331,7 @@ body {
 
 .outline-group-chevron {
   color: var(--text-dim);
-  font-size: 13px;
+  font-size: var(--text-sm);
   line-height: 1;
   transition: transform 0.15s;
 }
@@ -337,7 +342,7 @@ body {
 
 .outline-group-header h3 {
   color: var(--text-dim);
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 800;
   letter-spacing: 0.04em;
   margin: 0;
@@ -374,7 +379,7 @@ body {
 .outline-id {
   color: var(--accent);
   font-family: monospace;
-  font-size: 15px;
+  font-size: var(--text-base);
   font-weight: 800;
 }
 
@@ -396,7 +401,7 @@ body {
   border-radius: 4px;
   background: var(--bg);
   color: var(--text-dim);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 700;
   padding: 2px 6px;
 }
@@ -409,7 +414,7 @@ body {
 .outline-card-title {
   display: block;
   margin-top: 7px;
-  font-size: 18px;
+  font-size: var(--text-lg);
   font-weight: 700;
   line-height: 1.35;
 }
@@ -428,7 +433,7 @@ body {
   border-radius: 4px;
   background: var(--surface);
   color: var(--text-dim);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 700;
   padding: 2px 6px;
 }
@@ -437,13 +442,13 @@ body {
   display: block;
   margin-top: 8px;
   color: var(--text-dim);
-  font-size: 15px;
+  font-size: var(--text-base);
   line-height: 1.45;
 }
 
 .outline-empty {
   color: var(--text-dim);
-  font-size: 15px;
+  font-size: var(--text-base);
   padding: 8px 2px;
 }
 
@@ -487,7 +492,7 @@ body {
 }
 
 .column-title {
-  font-size: 20px;
+  font-size: var(--text-lg);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -496,7 +501,7 @@ body {
 
 .column-count {
   color: var(--text-dim);
-  font-size: 18px;
+  font-size: var(--text-lg);
   flex: 1;
 }
 
@@ -511,7 +516,7 @@ body {
 
 .empty-state {
   color: var(--text-dim);
-  font-size: 18px;
+  font-size: var(--text-lg);
   text-align: center;
   padding: 24px 8px;
 }
@@ -561,7 +566,7 @@ body {
 }
 
 .item-label {
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 700;
   color: var(--accent);
   font-family: monospace;
@@ -573,7 +578,7 @@ body {
   border-radius: 4px;
   background: var(--surface2);
   color: var(--text-dim);
-  font-size: 11px;
+  font-size: var(--text-xs);
   font-weight: 700;
   padding: 2px 6px;
   text-transform: uppercase;
@@ -604,7 +609,7 @@ body {
   border-radius: 4px;
   background: var(--surface2);
   color: var(--text-dim);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 700;
   padding: 2px 6px;
 }
@@ -634,7 +639,7 @@ body {
 }
 
 .badge {
-  font-size: 15px;
+  font-size: var(--text-base);
   font-weight: 600;
   padding: 1px 5px;
   border-radius: 8px;
@@ -657,7 +662,7 @@ body {
 .drag-handle {
   cursor: grab;
   color: var(--text-dim);
-  font-size: 21px;
+  font-size: var(--text-xl);
   line-height: 1;
   padding: 0 2px;
   flex-shrink: 0;
@@ -678,7 +683,7 @@ body {
 /* ── SR card view ── */
 
 .sr-name {
-  font-size: 16px;
+  font-size: var(--text-base);
   font-weight: 600;
   color: var(--text);
   margin-bottom: 4px;
@@ -695,7 +700,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-size: 15px;
+  font-size: var(--text-base);
   padding: 2px 7px;
   border-radius: 10px;
   background: var(--surface2);
@@ -714,14 +719,14 @@ body {
 
 .sr-review-block-title {
   color: var(--text-dim);
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 .sr-review-block .markdown-view {
-  font-size: 15px;
+  font-size: var(--text-base);
 }
 
 .tag-list {
@@ -741,13 +746,13 @@ body {
   border-radius: 4px;
   background: color-mix(in srgb, var(--accent) 10%, var(--surface));
   color: var(--text);
-  font-size: 14px;
+  font-size: var(--text-base);
   line-height: 1.2;
   overflow-wrap: anywhere;
 }
 
 .priority-badge {
-  font-size: 15px;
+  font-size: var(--text-base);
   font-weight: 700;
   padding: 2px 6px;
   border-radius: 4px;
@@ -770,6 +775,10 @@ body {
 .card-content {
   margin-bottom: 8px;
   line-height: 1.5;
+  font-size: var(--text-base);
+  color: var(--text);
+  word-break: break-word;
+  white-space: pre-wrap;
 }
 
 .sr-edit-form {
@@ -780,23 +789,23 @@ body {
 }
 
 .card .sr-edit-form .sr-field-label {
-  font-size: 12px;
+  font-size: var(--text-sm);
 }
 
 .card .sr-edit-form .sr-field-input {
-  font-size: 14px;
+  font-size: var(--text-base);
 }
 
 .card .btn {
-  font-size: 15px;
+  font-size: var(--text-base);
 }
 
 .card .btn-ghost {
-  font-size: 14px;
+  font-size: var(--text-base);
 }
 
 .card .sr-edit-form .priority-btn {
-  font-size: 13px;
+  font-size: var(--text-sm);
 }
 
 .sr-field {
@@ -816,7 +825,7 @@ body {
 }
 
 .sr-field-label {
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -828,7 +837,7 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   color: var(--text);
-  font-size: 15px;
+  font-size: var(--text-base);
   padding: 5px 8px;
   outline: none;
   font-family: inherit;
@@ -867,7 +876,7 @@ body {
   color: var(--text);
   cursor: pointer;
   font: inherit;
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 700;
   padding: 3px 8px;
 }
@@ -887,7 +896,7 @@ body {
   border: 1px solid var(--border);
   background: var(--surface2);
   color: var(--text-dim);
-  font-size: 16px;
+  font-size: var(--text-base);
   font-weight: 700;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
@@ -912,13 +921,6 @@ body {
   color: var(--text);
 }
 
-.card-content {
-  font-size: 16px;
-  color: var(--text);
-  word-break: break-word;
-  white-space: pre-wrap;
-}
-
 .card-actions {
   display: flex;
   gap: 4px;
@@ -931,7 +933,7 @@ body {
   border: 1px solid var(--accent);
   border-radius: var(--radius);
   color: var(--text);
-  font-size: 20px;
+  font-size: var(--text-lg);
   line-height: 1.5;
   padding: 6px 8px;
   resize: vertical;
@@ -941,7 +943,7 @@ body {
 }
 
 .card-confirm {
-  font-size: 18px;
+  font-size: var(--text-lg);
   color: var(--warning);
   margin-top: 6px;
 }
@@ -970,7 +972,7 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   color: var(--text);
-  font-size: 20px;
+  font-size: var(--text-lg);
   line-height: 1.5;
   padding: 6px 8px;
   resize: vertical;
@@ -999,6 +1001,7 @@ body {
   flex-direction: column;
   overflow: hidden;
   position: relative;
+  width: var(--rpw, 480px);
 }
 
 .panel-resizer {
@@ -1035,7 +1038,7 @@ body {
   align-items: center;
   gap: 6px;
   padding: 8px 12px;
-  font-size: 17px;
+  font-size: var(--text-lg);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -1068,7 +1071,7 @@ body {
 
 .detail-card h2 {
   color: var(--text);
-  font-size: 16px;
+  font-size: var(--text-base);
   font-weight: 600;
   line-height: 1.25;
   margin-top: 4px;
@@ -1077,7 +1080,7 @@ body {
 .detail-label {
   color: var(--accent);
   font-family: monospace;
-  font-size: 15px;
+  font-size: var(--text-base);
   font-weight: 800;
 }
 
@@ -1092,7 +1095,7 @@ body {
 .detail-field-label {
   color: var(--text-dim);
   display: block;
-  font-size: 12px;
+  font-size: var(--text-sm);
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -1100,7 +1103,7 @@ body {
 
 .detail-field p {
   color: var(--text);
-  font-size: 15px;
+  font-size: var(--text-base);
   line-height: 1.6;
   margin-top: 6px;
   white-space: pre-wrap;
@@ -1115,7 +1118,7 @@ body {
 
 .markdown-view {
   color: var(--text-dim);
-  font-size: 15px;
+  font-size: var(--text-base);
   line-height: 1.45;
   margin-top: 8px;
 }
@@ -1129,15 +1132,15 @@ body {
 }
 
 .markdown-view h2 {
-  font-size: 22px;
+  font-size: var(--text-xl);
 }
 
 .markdown-view h3 {
-  font-size: 19px;
+  font-size: var(--text-lg);
 }
 
 .markdown-view h4 {
-  font-size: 17px;
+  font-size: var(--text-lg);
 }
 
 .markdown-view p {
@@ -1169,7 +1172,7 @@ body {
 .warning-badge {
   background: var(--warning);
   color: #000;
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 700;
   padding: 2px 6px;
   border-radius: 10px;
@@ -1184,7 +1187,7 @@ body {
   padding: 5px 6px;
   border-radius: var(--radius);
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--text-base);
 }
 
 .warning-row:hover {
@@ -1193,12 +1196,12 @@ body {
 
 .warning-icon {
   flex-shrink: 0;
-  font-size: 14px;
+  font-size: var(--text-base);
   line-height: 1.4;
 }
 
 .warning-label-chip {
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 700;
   background: var(--warning);
   color: #000;
@@ -1216,7 +1219,7 @@ body {
 
 .no-warnings {
   color: var(--text-dim);
-  font-size: 14px;
+  font-size: var(--text-base);
   padding: 8px 4px;
   text-align: center;
 }
@@ -1228,7 +1231,7 @@ body {
 }
 
 .link-section-title {
-  font-size: 12px;
+  font-size: var(--text-sm);
   font-weight: 700;
   color: var(--text-dim);
   text-transform: uppercase;
@@ -1243,7 +1246,7 @@ body {
   padding: 4px 6px;
   border-radius: var(--radius);
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--text-base);
 }
 
 .link-option:hover {
@@ -1272,7 +1275,7 @@ body {
 
 .no-selection {
   color: var(--text-dim);
-  font-size: 14px;
+  font-size: var(--text-base);
   padding: 8px 4px;
   text-align: center;
 }
@@ -1329,7 +1332,7 @@ body {
 }
 .markdown-editor-tabs .tab {
   padding: 6px 12px;
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 500;
   color: var(--text-dim);
   background: transparent;
@@ -1357,10 +1360,53 @@ body {
 }
 .markdown-editor-preview {
   padding: 12px;
-  font-size: 14px;
+  font-size: var(--text-base);
   line-height: 1.5;
   color: var(--text);
   min-height: 100px;
+}
+
+/* ── Exit modal ── */
+
+.exit-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.exit-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  max-width: 420px;
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.exit-modal-title {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--warning);
+}
+
+.exit-modal-desc {
+  font-size: var(--text-base);
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
+.exit-modal-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 /* Markdown specific tweaks in cards */

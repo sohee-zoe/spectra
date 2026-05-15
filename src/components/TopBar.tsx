@@ -20,7 +20,9 @@ type Props = {
 };
 
 function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
 export function TopBar({
@@ -62,6 +64,7 @@ export function TopBar({
           className="topbar-search"
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
+          placeholder="Search items…"
           aria-label="Search items"
         />
 

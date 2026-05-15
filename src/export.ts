@@ -368,17 +368,19 @@ export function validateProjectData(raw: unknown): ImportResult {
   if (!Array.isArray(r.items)) {
     return { ok: false, error: "Missing or invalid 'items' array." };
   }
+  const VALID_ITEM_TYPES = new Set(["UR", "SR", "FEATURE"]);
+  const VALID_REVIEW_STATUSES = new Set(["stable", "approved", "needs review", "in review"]);
   for (const item of r.items) {
     const i = item as Record<string, unknown>;
     if (
       !isString(i.id) ||
-      !["UR", "SR", "FEATURE"].includes(i.type as string) ||
+      !VALID_ITEM_TYPES.has(i.type as string) ||
       !isNumber(i.index) ||
       !isString(i.content) ||
       !isString(i.createdAt) ||
       !isString(i.updatedAt) ||
       (i.reviewStatus !== undefined &&
-        !["stable", "approved", "needs review", "in review"].includes(i.reviewStatus as string)) ||
+        !VALID_REVIEW_STATUSES.has(i.reviewStatus as string)) ||
       (i.reporter !== undefined && !isString(i.reporter)) ||
       (i.acceptanceCriteria !== undefined && !isString(i.acceptanceCriteria)) ||
       (i.constraints !== undefined && !isString(i.constraints)) ||
@@ -395,11 +397,12 @@ export function validateProjectData(raw: unknown): ImportResult {
   if (!Array.isArray(r.links)) {
     return { ok: false, error: "Missing or invalid 'links' array." };
   }
+  const VALID_LINK_TYPES = new Set(["UR_TO_SR", "SR_TO_FEATURE"]);
   for (const link of r.links) {
     const l = link as Record<string, unknown>;
     if (
       !isString(l.id) ||
-      !["UR_TO_SR", "SR_TO_FEATURE"].includes(l.type as string) ||
+      !VALID_LINK_TYPES.has(l.type as string) ||
       !isString(l.sourceId) ||
       !isString(l.targetId) ||
       !isString(l.createdAt)

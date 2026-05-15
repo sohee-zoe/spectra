@@ -50,41 +50,39 @@ export function RightPanel({
     Object.assign(document.body.style, { cursor: "ew-resize", userSelect: "none" });
   }, []);
 
-  const stopResizing = useCallback(() => {
-    isResizing.current = false;
-    Object.assign(document.body.style, { cursor: "", userSelect: "" });
-  }, []);
-
-  const resize = useCallback((e: MouseEvent) => {
+  const resizeHandlerRef = useRef((e: MouseEvent) => {
     if (isResizing.current) {
       const newWidth = window.innerWidth - e.clientX;
-      if (newWidth > 300 && newWidth < 1200) {
-        setWidth(newWidth);
-      }
+      if (newWidth > 300 && newWidth < 1200) setWidth(newWidth);
     }
-  }, []);
+  });
 
   useEffect(() => {
-    window.addEventListener("mousemove", resize);
-    window.addEventListener("mouseup", stopResizing);
-    return () => {
-      window.removeEventListener("mousemove", resize);
-      window.removeEventListener("mouseup", stopResizing);
+    const onMove = (e: MouseEvent) => resizeHandlerRef.current(e);
+    const onUp = () => {
+      isResizing.current = false;
+      Object.assign(document.body.style, { cursor: "", userSelect: "" });
     };
-  }, [resize, stopResizing]);
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, []);
 
   return (
     <aside 
       className="right-panel" 
       aria-label="Document detail"
-      style={{ width: `${width}px` }}
+      style={{ '--rpw': `${width}px` } as React.CSSProperties & { '--rpw': string }}
     >
       <div
         className="panel-resizer"
         onMouseDown={startResizing}
         role="separator"
         aria-label="Resize document detail"
-        aria-orientation="vertical"
+        aria-orientation="horizontal"
         tabIndex={0}
         onKeyDown={(e) => {
           if (e.key === "ArrowLeft") setWidth((w) => Math.min(w + 16, 1200));
@@ -155,11 +153,11 @@ export function RightPanel({
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => e.key === "Enter" && onWarningClick(w.itemId)}
-                aria-label={`${w.label}: ${WARNING_MESSAGES[w.code]}`}
+                aria-label={`${w.label}: ${WARNING_MESSAGES[w.code] ?? w.code}`}
               >
                 <span className="warning-icon" aria-hidden="true">⚠</span>
                 <span className="warning-label-chip">{w.label}</span>
-                <span className="warning-text">{WARNING_MESSAGES[w.code]}</span>
+                <span className="warning-text">{WARNING_MESSAGES[w.code] ?? w.code}</span>
               </div>
             ))
           )}

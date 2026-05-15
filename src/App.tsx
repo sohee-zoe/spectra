@@ -26,7 +26,6 @@ import {
   validateTraceability,
   getLabel,
 } from "./domain/projectHelpers";
-import { SAMPLE_PROJECT } from "./domain/sampleData";
 import { TopBar } from "./components/TopBar";
 import { RequirementColumn } from "./components/RequirementColumn";
 import { RightPanel } from "./components/RightPanel";
@@ -45,6 +44,19 @@ import type { ImportResult } from "./export";
 
 const STORAGE_KEY = "spectra.requirements.v1";
 
+function emptyProject(): ProjectData {
+  return {
+    project: {
+      id: crypto.randomUUID(),
+      name: "새 프로젝트",
+      version: "1.0.0",
+      updatedAt: new Date().toISOString(),
+    },
+    items: [],
+    links: [],
+  };
+}
+
 function loadFromStorage(): ProjectData {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -56,9 +68,9 @@ function loadFromStorage(): ProjectData {
       }
     }
   } catch {
-    // Corrupt data — fall through to sample
+    // Corrupt data — fall through to empty project
   }
-  return SAMPLE_PROJECT;
+  return emptyProject();
 }
 
 // ── UI state types ─────────────────────────────────────────────────────────
@@ -87,6 +99,7 @@ function App() {
   const [theme, setTheme] = useState<"dark" | "light">(() => {
     return (localStorage.getItem("spectra.theme") as "dark" | "light") || "dark";
   });
+  const [showExitModal, setShowExitModal] = useState(false);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -180,26 +193,36 @@ function App() {
     Object.assign(document.body.style, { cursor: "col-resize", userSelect: "none" });
   }, []);
 
-  const stopResizingOutline = useCallback(() => {
-    isResizingOutline.current = false;
-    Object.assign(document.body.style, { cursor: "", userSelect: "" });
-  }, []);
-
-  const resizeOutline = useCallback((event: MouseEvent) => {
+  const resizeOutlineRef = useRef((event: MouseEvent) => {
     if (!isResizingOutline.current || !workspaceRef.current) return;
     const workspaceLeft = workspaceRef.current.getBoundingClientRect().left;
     const nextWidth = event.clientX - workspaceLeft;
     setOutlineWidth(Math.min(Math.max(nextWidth, 240), 520));
+  });
+
+  useEffect(() => {
+    const onMove = (event: MouseEvent) => resizeOutlineRef.current(event);
+    const onUp = () => {
+      isResizingOutline.current = false;
+      Object.assign(document.body.style, { cursor: "", userSelect: "" });
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
   }, []);
 
   useEffect(() => {
-    window.addEventListener("mousemove", resizeOutline);
-    window.addEventListener("mouseup", stopResizingOutline);
-    return () => {
-      window.removeEventListener("mousemove", resizeOutline);
-      window.removeEventListener("mouseup", stopResizingOutline);
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+      setShowExitModal(true);
     };
-  }, [resizeOutline, stopResizingOutline]);
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, []);
 
   // ── Add ───────────────────────────────────────────────────────────────────
   function handleStartAdd(type: RequirementType) {
@@ -429,7 +452,7 @@ function App() {
         collisionDetection={closestCenter}
         onDragEnd={handleDragEnd}
       >
-        <div className="workspace" ref={workspaceRef} onClick={handleWorkspaceClick} onKeyDown={(e) => { if (e.key === "Escape") handleWorkspaceClick(e as unknown as React.MouseEvent); }}>
+        <div className="workspace" role="main" ref={workspaceRef} onClick={handleWorkspaceClick} onKeyDown={(e) => { if (e.key === "Escape") handleWorkspaceClick(e as unknown as React.MouseEvent); }}>
           {viewMode === "list" ? (
             <div
               className="review-workspace"
@@ -510,6 +533,22 @@ function App() {
           />
         </div>
       </DndContext>
+
+      {showExitModal && (
+        <div className="exit-modal-overlay" role="presentation" onClick={() => setShowExitModal(false)} onKeyDown={(e) => { if (e.key === "Escape") setShowExitModal(false); }}>
+          <div className="exit-modal" role="dialog" aria-modal="true" aria-labelledby="exit-modal-title" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+            <h2 id="exit-modal-title" className="exit-modal-title">저장하지 않으면 데이터가 삭제됩니다</h2>
+            <p className="exit-modal-desc">
+              YAML 파일로 다운로드한 뒤 다시 불러오면 이어서 편집할 수 있습니다.
+            </p>
+            <div className="exit-modal-actions">
+              <button className="btn btn-primary" onClick={handleYamlExport}>YAML 다운로드</button>
+              <button className="btn" onClick={handleMarkdownExport}>MD 다운로드</button>
+              <button className="btn btn-ghost" onClick={() => setShowExitModal(false)}>닫기</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
