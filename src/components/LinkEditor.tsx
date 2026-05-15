@@ -55,7 +55,7 @@ export function LinkEditor({ selectedItem, allItems, links, onAddLink, onRemoveL
   if (type === "UR") {
     const srs = allItems.filter((i) => i.type === "SR");
     const linkedSrIds = new Set(
-      links.filter((l) => l.type === "UR_TO_SR" && l.sourceId === id).map((l) => l.targetId)
+      links.reduce<string[]>((acc, l) => { if (l.type === "UR_TO_SR" && l.sourceId === id) acc.push(l.targetId); return acc; }, [])
     );
     return (
       <LinkSection
@@ -77,10 +77,10 @@ export function LinkEditor({ selectedItem, allItems, links, onAddLink, onRemoveL
     const urs = allItems.filter((i) => i.type === "UR");
     const features = allItems.filter((i) => i.type === "FEATURE");
     const linkedUrIds = new Set(
-      links.filter((l) => l.type === "UR_TO_SR" && l.targetId === id).map((l) => l.sourceId)
+      links.reduce<string[]>((acc, l) => { if (l.type === "UR_TO_SR" && l.targetId === id) acc.push(l.sourceId); return acc; }, [])
     );
     const linkedFtIds = new Set(
-      links.filter((l) => l.type === "SR_TO_FEATURE" && l.sourceId === id).map((l) => l.targetId)
+      links.reduce<string[]>((acc, l) => { if (l.type === "SR_TO_FEATURE" && l.sourceId === id) acc.push(l.targetId); return acc; }, [])
     );
     return (
       <>
@@ -116,7 +116,7 @@ export function LinkEditor({ selectedItem, allItems, links, onAddLink, onRemoveL
   // FEATURE
   const srs = allItems.filter((i) => i.type === "SR");
   const linkedSrIds = new Set(
-    links.filter((l) => l.type === "SR_TO_FEATURE" && l.targetId === id).map((l) => l.sourceId)
+    links.reduce<string[]>((acc, l) => { if (l.type === "SR_TO_FEATURE" && l.targetId === id) acc.push(l.sourceId); return acc; }, [])
   );
   return (
     <LinkSection

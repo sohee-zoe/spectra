@@ -148,7 +148,7 @@ function SREditForm({
 
       <div className="sr-field">
         <label className="sr-field-label">Description</label>
-        <MarkdownEditor value={content} onChange={setContent} minRows={4} />
+        <MarkdownEditor value={content} onChange={setContent} minRows={6} />
       </div>
 
       <StatusField value={reviewStatus} onChange={setReviewStatus} />
@@ -260,7 +260,7 @@ function GeneralEditForm({
 
       <div className="sr-field">
         <label className="sr-field-label">Description</label>
-        <MarkdownEditor value={content} onChange={setContent} minRows={4} />
+        <MarkdownEditor value={content} onChange={setContent} minRows={6} />
       </div>
 
       <StatusField value={reviewStatus} onChange={setReviewStatus} />
@@ -445,6 +445,7 @@ export function RequirementCard({
       style={style}
       ref={setNodeRef}
       onClick={onSelect}
+      onDoubleClick={(e) => { e.stopPropagation(); onEdit(); }}
       role="article"
       aria-label={label}
       aria-selected={isSelected}
@@ -485,23 +486,25 @@ export function RequirementCard({
         </div>
       )}
 
-      <div className="card-actions">
-        <button
-          className="btn btn-ghost"
-          onClick={(e) => { e.stopPropagation(); onEdit(); }}
-          aria-label={`Edit ${label}`}
-        >
-          Edit
-        </button>
-        <button
-          className="btn btn-ghost"
-          onClick={(e) => { e.stopPropagation(); onRequestDelete(); }}
-          aria-label={`Delete ${label}`}
-          style={{ color: "var(--error)" }}
-        >
-          Delete
-        </button>
-      </div>
+      {isSelected && (
+        <div className="card-actions">
+          <button
+            className="btn btn-ghost"
+            onClick={(e) => { e.stopPropagation(); onEdit(); }}
+            aria-label={`Edit ${label}`}
+          >
+            Edit
+          </button>
+          <button
+            className="btn btn-ghost"
+            onClick={(e) => { e.stopPropagation(); onRequestDelete(); }}
+            aria-label={`Delete ${label}`}
+            style={{ color: "var(--error)" }}
+          >
+            Delete
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -504,9 +504,9 @@ function App() {
           {/* SVG connector overlay — plain bezier lines, no arrows */}
           {viewMode === "list" && connectorPaths.length > 0 && (
             <svg className="connector-svg" aria-hidden="true">
-              {connectorPaths.map((d, i) => (
+              {connectorPaths.map((d) => (
                 <path
-                  key={i}
+                  key={d}
                   d={d}
                   fill="none"
                   stroke="var(--link-color)"
