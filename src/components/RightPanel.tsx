@@ -47,14 +47,12 @@ export function RightPanel({
 
   const startResizing = useCallback(() => {
     isResizing.current = true;
-    document.body.style.cursor = "ew-resize";
-    document.body.style.userSelect = "none";
+    Object.assign(document.body.style, { cursor: "ew-resize", userSelect: "none" });
   }, []);
 
   const stopResizing = useCallback(() => {
     isResizing.current = false;
-    document.body.style.cursor = "";
-    document.body.style.userSelect = "";
+    Object.assign(document.body.style, { cursor: "", userSelect: "" });
   }, []);
 
   const resize = useCallback((e: MouseEvent) => {
@@ -81,9 +79,17 @@ export function RightPanel({
       aria-label="Document detail"
       style={{ width: `${width}px` }}
     >
-      <div 
-        className="panel-resizer" 
-        onMouseDown={startResizing} 
+      <div
+        className="panel-resizer"
+        onMouseDown={startResizing}
+        role="separator"
+        aria-label="Resize document detail"
+        aria-orientation="vertical"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowLeft") setWidth((w) => Math.min(w + 16, 1200));
+          if (e.key === "ArrowRight") setWidth((w) => Math.max(w - 16, 300));
+        }}
       />
       <div className="panel-section document-detail-section" style={{ flex: "0 0 auto" }}>
         <div className="workspace-panel-header panel-section-header document-detail-header" style={{ gap: 8 }}>

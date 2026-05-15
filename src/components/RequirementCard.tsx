@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type {
@@ -125,11 +125,15 @@ function SREditForm({
     setPriority((prev) => (prev === p ? undefined : p));
   }
 
+  const nameId = useId();
+  const domainId = useId();
+
   return (
-    <div className="sr-edit-form" onKeyDown={(e) => e.stopPropagation()}>
+    <div className="sr-edit-form" role="group" onKeyDown={(e) => e.stopPropagation()}>
       <div className="sr-field">
-        <label className="sr-field-label">Name</label>
+        <label className="sr-field-label" htmlFor={nameId}>Name</label>
         <input
+          id={nameId}
           className="sr-field-input"
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -137,8 +141,9 @@ function SREditForm({
       </div>
 
       <div className="sr-field">
-        <label className="sr-field-label">Domain (for ID)</label>
+        <label className="sr-field-label" htmlFor={domainId}>Domain (for ID)</label>
         <input
+          id={domainId}
           className="sr-field-input"
           value={customPrefix}
           onChange={(e) => setCustomPrefix(e.target.value)}
@@ -147,14 +152,14 @@ function SREditForm({
       </div>
 
       <div className="sr-field">
-        <label className="sr-field-label">Description</label>
+        <div className="sr-field-label">Description</div>
         <MarkdownEditor value={content} onChange={setContent} minRows={6} />
       </div>
 
       <StatusField value={reviewStatus} onChange={setReviewStatus} />
 
       <div className="sr-field">
-        <label className="sr-field-label">Priority</label>
+        <div className="sr-field-label">Priority</div>
         <div className="priority-group">
           <button
             type="button"
@@ -176,12 +181,12 @@ function SREditForm({
       </div>
 
       <div className="sr-field">
-        <label className="sr-field-label">Acceptance Criteria</label>
+        <div className="sr-field-label">Acceptance Criteria</div>
         <MarkdownEditor value={acceptanceCriteria} onChange={setAcceptanceCriteria} minRows={3} />
       </div>
 
       <div className="sr-field">
-        <label className="sr-field-label">Constraints / Notes</label>
+        <div className="sr-field-label">Constraints / Notes</div>
         <MarkdownEditor value={constraints} onChange={setConstraints} minRows={2} />
       </div>
 
@@ -237,11 +242,17 @@ function GeneralEditForm({
   const [verificationStatus, setVerificationStatus] = useState(item.verificationStatus ?? "");
   const [tags, setTags] = useState<string[]>(item.tags ?? []);
 
+  const nameId = useId();
+  const domainId = useId();
+  const reporterId = useId();
+  const ownerId = useId();
+
   return (
-    <div className="sr-edit-form" onKeyDown={(e) => e.stopPropagation()}>
+    <div className="sr-edit-form" role="group" onKeyDown={(e) => e.stopPropagation()}>
       <div className="sr-field">
-        <label className="sr-field-label">Name</label>
+        <label className="sr-field-label" htmlFor={nameId}>Name</label>
         <input
+          id={nameId}
           className="sr-field-input"
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -249,8 +260,9 @@ function GeneralEditForm({
       </div>
 
       <div className="sr-field">
-        <label className="sr-field-label">Domain (for ID)</label>
+        <label className="sr-field-label" htmlFor={domainId}>Domain (for ID)</label>
         <input
+          id={domainId}
           className="sr-field-input"
           value={customPrefix}
           onChange={(e) => setCustomPrefix(e.target.value)}
@@ -259,7 +271,7 @@ function GeneralEditForm({
       </div>
 
       <div className="sr-field">
-        <label className="sr-field-label">Description</label>
+        <div className="sr-field-label">Description</div>
         <MarkdownEditor value={content} onChange={setContent} minRows={6} />
       </div>
 
@@ -267,8 +279,9 @@ function GeneralEditForm({
 
       {item.type === "UR" && (
         <div className="sr-field">
-          <label className="sr-field-label">Reporter</label>
+          <label className="sr-field-label" htmlFor={reporterId}>Reporter</label>
           <input
+            id={reporterId}
             className="sr-field-input"
             value={reporter}
             onChange={(e) => setReporter(e.target.value)}
@@ -279,8 +292,9 @@ function GeneralEditForm({
       {item.type === "FEATURE" && (
         <>
           <div className="sr-field">
-            <label className="sr-field-label">Owner</label>
+            <label className="sr-field-label" htmlFor={ownerId}>Owner</label>
             <input
+              id={ownerId}
               className="sr-field-input"
               value={owner}
               onChange={(e) => setOwner(e.target.value)}
@@ -446,7 +460,9 @@ export function RequirementCard({
       ref={setNodeRef}
       onClick={onSelect}
       onDoubleClick={(e) => { e.stopPropagation(); onEdit(); }}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(); } }}
       role="article"
+      tabIndex={0}
       aria-label={label}
       aria-selected={isSelected}
       data-item-id={item.id}

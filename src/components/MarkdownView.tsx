@@ -33,9 +33,9 @@ function InlineMarkdown({ text }: { text: string }) {
   return (
     <>
       {parseInline(text).map((part, index) => {
-        if (part.type === "strong") return <strong key={index}>{part.value}</strong>;
-        if (part.type === "code") return <code key={index}>{part.value}</code>;
-        return <span key={index}>{part.value}</span>;
+        if (part.type === "strong") return <strong key={`strong-${index}`}>{part.value}</strong>;
+        if (part.type === "code") return <code key={`code-${index}`}>{part.value}</code>;
+        return <span key={`text-${index}`}>{part.value}</span>;
       })}
     </>
   );

@@ -177,14 +177,12 @@ function App() {
   const startResizingOutline = useCallback((event: React.MouseEvent) => {
     event.preventDefault();
     isResizingOutline.current = true;
-    document.body.style.cursor = "col-resize";
-    document.body.style.userSelect = "none";
+    Object.assign(document.body.style, { cursor: "col-resize", userSelect: "none" });
   }, []);
 
   const stopResizingOutline = useCallback(() => {
     isResizingOutline.current = false;
-    document.body.style.cursor = "";
-    document.body.style.userSelect = "";
+    Object.assign(document.body.style, { cursor: "", userSelect: "" });
   }, []);
 
   const resizeOutline = useCallback((event: MouseEvent) => {
@@ -281,7 +279,7 @@ function App() {
     }));
   }
 
-  const [lastSaved, setLastSaved] = useState<string>(new Date().toISOString());
+  const [lastSaved, setLastSaved] = useState(() => new Date().toISOString());
 
   // ── Project Lifecycle ─────────────────────────────────────────────────────
   const handleNewProject = useCallback(() => {
@@ -431,7 +429,7 @@ function App() {
         collisionDetection={closestCenter}
         onDragEnd={handleDragEnd}
       >
-        <div className="workspace" ref={workspaceRef} onClick={handleWorkspaceClick}>
+        <div className="workspace" ref={workspaceRef} onClick={handleWorkspaceClick} onKeyDown={(e) => { if (e.key === "Escape") handleWorkspaceClick(e as unknown as React.MouseEvent); }}>
           {viewMode === "list" ? (
             <div
               className="review-workspace"

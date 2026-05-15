@@ -41,7 +41,7 @@ export function normalizeTags(tags?: string[]): string[] | undefined {
   if (!tags) return undefined;
   const normalized = tags
     .map((tag) => tag.trim().toLowerCase())
-    .filter(Boolean);
+    .filter((t) => Boolean(t) && !t.includes(":"));
   const unique = [...new Set(normalized)];
   return unique.length > 0 ? unique : undefined;
 }
@@ -251,10 +251,12 @@ export function getLabel(item: RequirementItem): string {
   let usePadding = true;
 
   if (!domainPart) {
-    const domainIdPattern = new RegExp(`^${defaultPrefix.toLowerCase()}-([a-z0-9]+)-[a-z0-9]+$`);
+    const domainIdPattern = new RegExp(`^${defaultPrefix.toLowerCase()}-([a-z][a-z0-9]*)-([0-9]+)$`);
     const match = item.id.toLowerCase().match(domainIdPattern);
     if (match) {
-      domainPart = match[1].toUpperCase();
+      const domain = match[1].toUpperCase();
+      const num = String(parseInt(match[2], 10)).padStart(2, "0");
+      return `${defaultPrefix}-${domain}-${num}`;
     } else {
       domainPart = "";
       usePadding = false;
@@ -274,20 +276,19 @@ export function validateTraceability(
 ): TraceabilityWarning[] {
   const warnings: TraceabilityWarning[] = [];
 
-  const linkedUrIds = new Set(
-    data.links.filter((l) => l.type === "UR_TO_SR").map((l) => l.sourceId)
-  );
-  const linkedSrIds_fromUr = new Set(
-    data.links.filter((l) => l.type === "UR_TO_SR").map((l) => l.targetId)
-  );
-  const linkedSrIds_toFeature = new Set(
-    data.links
-      .filter((l) => l.type === "SR_TO_FEATURE")
-      .map((l) => l.sourceId)
-  );
-  const linkedFeatureIds = new Set(
-    data.links.filter((l) => l.type === "SR_TO_FEATURE").map((l) => l.targetId)
-  );
+  const linkedUrIds = new Set<string>();
+  const linkedSrIds_fromUr = new Set<string>();
+  const linkedSrIds_toFeature = new Set<string>();
+  const linkedFeatureIds = new Set<string>();
+  for (const l of data.links) {
+    if (l.type === "UR_TO_SR") {
+      linkedUrIds.add(l.sourceId);
+      linkedSrIds_fromUr.add(l.targetId);
+    } else if (l.type === "SR_TO_FEATURE") {
+      linkedSrIds_toFeature.add(l.sourceId);
+      linkedFeatureIds.add(l.targetId);
+    }
+  }
 
   for (const item of data.items) {
     if (item.type === "UR" && !linkedUrIds.has(item.id)) {

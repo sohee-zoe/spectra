@@ -53,6 +53,25 @@ describe("createItem", () => {
     expect(p.items[0]!.tags).toEqual(["auth", "security"]);
   });
 
+  it("drops legacy meta-style tags", () => {
+    let p = createEmptyProject();
+    p = createItem(p, "FEATURE", "Tagged", {
+      tags: ["owner:fe", "verification:pending", "groups:2", "api"],
+    });
+    expect(p.items[0]!.tags).toEqual(["api"]);
+  });
+
+  it("persists review fields", () => {
+    let p = createEmptyProject();
+    p = createItem(p, "UR", "Reviewed", {
+      reviewStatus: "approved",
+      reporter: "Reviewer name",
+    });
+
+    expect(p.items[0]!.reviewStatus).toBe("approved");
+    expect(p.items[0]!.reporter).toBe("Reviewer name");
+  });
+
   it("assigns unique UUIDs", () => {
     const p = makeProject();
     const ids = p.items.map((i) => i.id);
@@ -174,6 +193,17 @@ describe("getLabel", () => {
     expect(getLabel(ur)).toBe("UR-1");
     expect(getLabel(sr)).toBe("SR-2");
     expect(getLabel(ft)).toBe("FT-1");
+  });
+
+  it("uses domain-coded ids when items already have them", () => {
+    const p = makeProject();
+    const ur = { ...p.items.find((i) => i.type === "UR")!, id: "ur-ord-01" };
+    const sr = { ...p.items.find((i) => i.type === "SR")!, id: "sr-ord-03" };
+    const ft = { ...p.items.find((i) => i.type === "FEATURE")!, id: "ft-voice-01" };
+
+    expect(getLabel(ur)).toBe("UR-ORD-01");
+    expect(getLabel(sr)).toBe("SR-ORD-03");
+    expect(getLabel(ft)).toBe("FT-VOICE-01");
   });
 });
 

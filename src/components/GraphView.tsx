@@ -41,7 +41,7 @@ function nodeLabel(item: RequirementItem, links: RequirementLink[]) {
           {item.name}
         </div>
       )}
-      <div style={{ marginTop: 5, fontSize: '12px', color: 'var(--text-dim)' }}>
+      <div style={{ marginTop: 5, fontSize: '12px', color: 'var(--text-dim)', whiteSpace: 'normal', overflowWrap: 'anywhere' }}>
         <MarkdownView content={item.content} />
       </div>
       {(attrChips.length > 0 || tagChips.length > 0) && (

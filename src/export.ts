@@ -56,7 +56,7 @@ export function exportYaml(data: ProjectData): void {
 
   // Sort items: UR → SR → FEATURE, then by index
   const typeOrder = ["UR", "SR", "FEATURE"];
-  const sortedItems = [...data.items].sort((a, b) => {
+  const sortedItems = data.items.toSorted((a, b) => {
     const ta = typeOrder.indexOf(a.type);
     const tb = typeOrder.indexOf(b.type);
     return ta !== tb ? ta - tb : a.index - b.index;
@@ -64,7 +64,7 @@ export function exportYaml(data: ProjectData): void {
 
   // Sort links: by type, then sourceId label, then targetId label
   const labelMap = new Map(data.items.map((i) => [i.id, getLabel(i)]));
-  const sortedLinks = [...data.links].sort((a, b) => {
+  const sortedLinks = data.links.toSorted((a, b) => {
     if (a.type !== b.type) return a.type.localeCompare(b.type);
     const sa = labelMap.get(a.sourceId) ?? "";
     const sb = labelMap.get(b.sourceId) ?? "";
@@ -75,7 +75,7 @@ export function exportYaml(data: ProjectData): void {
   });
 
   // Sort warnings: by code (severity), then label
-  const sortedWarnings = [...warnings].sort((a, b) =>
+  const sortedWarnings = warnings.toSorted((a, b) =>
     a.code.localeCompare(b.code) || a.label.localeCompare(b.label)
   );
 
@@ -118,16 +118,21 @@ export function projectToMarkdown(data: ProjectData): string {
   const items = data.items;
   const links = data.links;
 
-  const urs = items.filter((i) => i.type === "UR").sort((a, b) => a.index - b.index);
-  const srs = items.filter((i) => i.type === "SR").sort((a, b) => a.index - b.index);
-  const features = items.filter((i) => i.type === "FEATURE").sort((a, b) => a.index - b.index);
+  const urs = items.filter((i) => i.type === "UR").toSorted((a, b) => a.index - b.index);
+  const srs = items.filter((i) => i.type === "SR").toSorted((a, b) => a.index - b.index);
+  const features = items.filter((i) => i.type === "FEATURE").toSorted((a, b) => a.index - b.index);
 
   const labelMap = new Map(items.map((i) => [i.id, getLabel(i)]));
+  const itemMap = new Map(items.map((i) => [i.id, i]));
 
   function getLinkedLabels(itemId: string, linkType: string, side: "source" | "target"): string[] {
     return links
-      .filter((l) => l.type === linkType && (side === "source" ? l.sourceId === itemId : l.targetId === itemId))
-      .map((l) => labelMap.get(side === "source" ? l.targetId : l.sourceId) ?? "?")
+      .reduce<string[]>((acc, l) => {
+        if (l.type === linkType && (side === "source" ? l.sourceId === itemId : l.targetId === itemId)) {
+          acc.push(labelMap.get(side === "source" ? l.targetId : l.sourceId) ?? "?");
+        }
+        return acc;
+      }, [])
       .sort();
   }
 
@@ -270,9 +275,10 @@ export function projectToMarkdown(data: ProjectData): string {
   } else {
     for (const ur of urs) {
       const urLabel = getLabel(ur);
-      const linkedSrIds = links
-        .filter((l) => l.type === "UR_TO_SR" && l.sourceId === ur.id)
-        .map((l) => l.targetId);
+      const linkedSrIds = links.reduce<string[]>((acc, l) => {
+        if (l.type === "UR_TO_SR" && l.sourceId === ur.id) acc.push(l.targetId);
+        return acc;
+      }, []);
 
       if (linkedSrIds.length === 0) {
         const hasWarning = warnings.some((w) => w.itemId === ur.id);
@@ -281,16 +287,17 @@ export function projectToMarkdown(data: ProjectData): string {
         );
       } else {
         for (const srId of linkedSrIds) {
-          const sr = items.find((i) => i.id === srId);
+          const sr = itemMap.get(srId);
           if (!sr) continue;
           const srLabel = getLabel(sr);
-          const linkedFtIds = links
-            .filter((l) => l.type === "SR_TO_FEATURE" && l.sourceId === srId)
-            .map((l) => l.targetId);
+          const linkedFtIds = links.reduce<string[]>((acc, l) => {
+            if (l.type === "SR_TO_FEATURE" && l.sourceId === srId) acc.push(l.targetId);
+            return acc;
+          }, []);
 
           const ftLabels = linkedFtIds
             .map((ftId) => {
-              const ft = items.find((i) => i.id === ftId);
+              const ft = itemMap.get(ftId);
               return ft ? getLabel(ft) : "?";
             })
             .sort()

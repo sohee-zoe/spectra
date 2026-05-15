@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 
 export const DEFAULT_LABEL_OPTIONS = ["mvp", "frontend", "backend", "api", "ux", "security"];
 const DEFAULT_VERIFICATION_OPTIONS = ["pending", "ready", "passed", "failed", "blocked"];
 
 function normalizeChoices(values: string[]): string[] {
   return Array.from(
-    new Set(values.map((value) => value.trim()).filter(Boolean))
+    new Set(values.flatMap((value) => { const v = value.trim(); return v ? [v] : []; }))
   );
 }
 
@@ -56,7 +56,7 @@ export function ChoiceOrAddField({
             {option}
           </option>
         ))}
-        <option value="__add__">Add custom...</option>
+        <option value="__add__">Add custom…</option>
       </select>
 
       {isAdding && (
@@ -113,10 +113,13 @@ export function LabelsField({
     onChange(labels.filter((currentLabel) => currentLabel !== label));
   }
 
+  const labelsId = useId();
+
   return (
     <div className="sr-field">
-      <label className="sr-field-label">Labels</label>
+      <label className="sr-field-label" htmlFor={labelsId}>Labels</label>
       <select
+        id={labelsId}
         className="sr-field-input"
         aria-label="Labels"
         value={isAdding ? "__add__" : ""}
@@ -134,7 +137,7 @@ export function LabelsField({
             {option}
           </option>
         ))}
-        <option value="__add__">Add custom...</option>
+        <option value="__add__">Add custom…</option>
       </select>
 
       {isAdding && (

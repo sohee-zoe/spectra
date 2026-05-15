@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import type {
   ItemEditFields,
@@ -74,11 +74,16 @@ function SRAddForm({
     setPriority((prev) => (prev === p ? undefined : p));
   }
 
+  const nameId = useId();
+  const acId = useId();
+  const constraintsId = useId();
+
   return (
     <div className="add-form sr-edit-form">
       <div className="sr-field">
-        <label className="sr-field-label">Name</label>
+        <label className="sr-field-label" htmlFor={nameId}>Name</label>
         <input
+          id={nameId}
           className="sr-field-input"
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -87,7 +92,7 @@ function SRAddForm({
       </div>
 
       <div className="sr-field">
-        <label className="sr-field-label">Priority</label>
+        <div className="sr-field-label">Priority</div>
         <div className="priority-group">
           <button
             type="button"
@@ -109,7 +114,7 @@ function SRAddForm({
       </div>
 
       <div className="sr-field">
-        <label className="sr-field-label">Status</label>
+        <div className="sr-field-label">Status</div>
         <select
           className="sr-field-input"
           aria-label="Status"
@@ -126,8 +131,9 @@ function SRAddForm({
       </div>
 
       <div className="sr-field">
-        <label className="sr-field-label">Acceptance Criteria</label>
+        <label className="sr-field-label" htmlFor={acId}>Acceptance Criteria</label>
         <textarea
+          id={acId}
           className="sr-field-input"
           value={acceptanceCriteria}
           onChange={(e) => setAcceptanceCriteria(e.target.value)}
@@ -137,8 +143,9 @@ function SRAddForm({
       </div>
 
       <div className="sr-field">
-        <label className="sr-field-label">Constraints / Notes</label>
+        <label className="sr-field-label" htmlFor={constraintsId}>Constraints / Notes</label>
         <textarea
+          id={constraintsId}
           className="sr-field-input"
           value={constraints}
           onChange={(e) => setConstraints(e.target.value)}
@@ -150,7 +157,7 @@ function SRAddForm({
       <LabelsField value={tags} options={labelOptions} onChange={setTags} onAddCustom={onAddCustomLabel} />
 
       <div className="sr-field">
-        <label className="sr-field-label">Description</label>
+        <div className="sr-field-label">Description</div>
         <textarea
           className="add-form-textarea"
           value={content}
@@ -223,11 +230,16 @@ function GeneralAddForm({
     });
   }
 
+  const nameId = useId();
+  const reporterId = useId();
+  const ownerId = useId();
+
   return (
     <div className="add-form sr-edit-form">
       <div className="sr-field">
-        <label className="sr-field-label">Name</label>
+        <label className="sr-field-label" htmlFor={nameId}>Name</label>
         <input
+          id={nameId}
           className="sr-field-input"
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -236,7 +248,7 @@ function GeneralAddForm({
       </div>
 
       <div className="sr-field">
-        <label className="sr-field-label">Description</label>
+        <div className="sr-field-label">Description</div>
         <textarea
           className="add-form-textarea"
           value={content}
@@ -246,7 +258,7 @@ function GeneralAddForm({
       </div>
 
       <div className="sr-field">
-        <label className="sr-field-label">Status</label>
+        <div className="sr-field-label">Status</div>
         <select
           className="sr-field-input"
           aria-label="Status"
@@ -264,8 +276,9 @@ function GeneralAddForm({
 
       {type === "UR" && (
         <div className="sr-field">
-          <label className="sr-field-label">Reporter</label>
+          <label className="sr-field-label" htmlFor={reporterId}>Reporter</label>
           <input
+            id={reporterId}
             className="sr-field-input"
             value={reporter}
             onChange={(e) => setReporter(e.target.value)}
@@ -276,8 +289,9 @@ function GeneralAddForm({
       {type === "FEATURE" && (
         <div className="sr-field-row">
           <div className="sr-field sr-field-half">
-            <label className="sr-field-label">Owner</label>
+            <label className="sr-field-label" htmlFor={ownerId}>Owner</label>
             <input
+              id={ownerId}
               className="sr-field-input"
               value={owner}
               onChange={(e) => setOwner(e.target.value)}

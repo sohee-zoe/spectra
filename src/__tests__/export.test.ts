@@ -28,6 +28,8 @@ function baseProject(): ProjectData {
         type: "SR",
         index: 1,
         content: "System response",
+        acceptanceCriteria: "- It stores the order ID",
+        constraints: "- Payment timeout is 60 seconds",
         tags: ["api", "security"],
         createdAt: "2026-05-03T00:00:00.000Z",
         updatedAt: "2026-05-03T00:00:00.000Z",
@@ -164,7 +166,16 @@ describe("projectToMarkdown", () => {
   it("includes item tags", () => {
     const markdown = projectToMarkdown(baseProject());
 
-    expect(markdown).toContain("Tags: `api`, `security`");
+    expect(markdown).toContain("Labels: `api`, `security`");
+  });
+
+  it("includes SR acceptance criteria and constraints", () => {
+    const markdown = projectToMarkdown(baseProject());
+
+    expect(markdown).toContain("**Acceptance Criteria:**");
+    expect(markdown).toContain("- It stores the order ID");
+    expect(markdown).toContain("**Constraints / Notes:**");
+    expect(markdown).toContain("- Payment timeout is 60 seconds");
   });
 });
 
