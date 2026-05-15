@@ -46,10 +46,23 @@ describe("review workspace", () => {
 
     render(<App />);
 
-    expect(screen.getByDisplayValue("Release Readiness Tracker")).toBeInTheDocument();
-    expect(screen.getByRole("article", { name: /UR-REL-01/i })).toBeInTheDocument();
-    expect(screen.getByRole("article", { name: /SR-WF-01/i })).toBeInTheDocument();
-    expect(screen.getByRole("article", { name: /FT-API-01/i })).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Commerce Order Flow Demo")).toBeInTheDocument();
+    expect(screen.getByRole("article", { name: /UR-AUTH-01/i })).toBeInTheDocument();
+    expect(screen.getByRole("article", { name: /SR-CART-01/i })).toBeInTheDocument();
+    expect(screen.getByRole("article", { name: /FT-SHIP-01/i })).toBeInTheDocument();
+  });
+
+  it("switches demo data language without changing app chrome", () => {
+    window.history.replaceState({}, "", "/demo");
+
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Use Korean demo data" }));
+
+    expect(screen.getByDisplayValue("커머스 주문 흐름 데모")).toBeInTheDocument();
+    expect(screen.getByRole("article", { name: /UR-AUTH-01/i })).toBeInTheDocument();
+    expect(screen.getByText("회원 로그인")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Load YAML file" })).toBeInTheDocument();
   });
 
   it("collapses document outline categories", () => {

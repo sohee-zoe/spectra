@@ -31,6 +31,7 @@ const longItem: RequirementItem = {
   name: "긴 요구사항",
   content:
     "고객이 매우 긴 요구사항 설명을 작성하더라도 그래프 노드 안에서 줄바꿈되어 읽을 수 있어야 한다.",
+  tags: ["checkout"],
   createdAt: "2026-05-15T00:00:00.000Z",
   updatedAt: "2026-05-15T00:00:00.000Z",
 };
@@ -44,6 +45,7 @@ describe("GraphView", () => {
     const wrapper = content.closest("div[style]");
     expect(wrapper).toHaveStyle({ whiteSpace: "normal" });
     expect(wrapper).toHaveStyle({ overflowWrap: "anywhere" });
+    expect(screen.getByText("checkout").closest(".graph-node-chip-row")).toBeInTheDocument();
     expect(screen.queryByText(/Reporter Sample/)).not.toBeInTheDocument();
     expect(screen.queryByText("reporter:Sample")).not.toBeInTheDocument();
   });

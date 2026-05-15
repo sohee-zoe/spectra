@@ -90,7 +90,9 @@ body {
   padding: 4px 8px;
   border-radius: var(--radius);
   outline: none;
-  min-width: 160px;
+  flex: 0 1 auto;
+  min-width: 280px;
+  max-width: min(1280px, 72vw);
   transition: border-color 0.15s;
 }
 
@@ -101,14 +103,18 @@ body {
 
 .topbar-status {
   color: var(--text-dim);
-  font-size: var(--text-lg);
-  flex: 1;
+  font-size: var(--text-base);
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .topbar-actions {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
+  min-width: 0;
+  margin-left: auto;
 }
 
 .topbar-search {
@@ -119,13 +125,13 @@ body {
   padding: 4px 8px;
   border-radius: var(--radius);
   outline: none;
-  width: 150px;
+  width: 220px;
   transition: border-color 0.15s, width 0.2s;
 }
 
 .topbar-search:focus {
   border-color: var(--accent);
-  width: 200px;
+  width: 280px;
 }
 
 .warning-filter-btn {
@@ -604,6 +610,19 @@ body {
   margin-bottom: 8px;
 }
 
+.graph-node-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.graph-node-chip-row .tag-chip {
+  min-height: 18px;
+  padding: 1px 6px;
+  font-size: var(--text-sm);
+}
+
 .card-attribute {
   border: 1px solid var(--border);
   border-radius: 4px;
@@ -701,6 +720,7 @@ body {
   align-items: center;
   gap: 3px;
   font-size: var(--text-base);
+  min-height: 22px;
   padding: 2px 7px;
   border-radius: 10px;
   background: var(--surface2);
@@ -878,7 +898,9 @@ body {
   font: inherit;
   font-size: var(--text-base);
   font-weight: 700;
-  padding: 3px 8px;
+  min-height: 22px;
+  padding: 2px 7px;
+  line-height: 1.2;
 }
 
 .editable-label-chip:hover {

@@ -4,10 +4,20 @@ test.describe("exit warning", () => {
   test("renders the demo dataset on the demo route", async ({ page }) => {
     await page.goto("/demo");
 
-    await expect(page.getByLabel("Project name")).toHaveValue("Release Readiness Tracker");
-    await expect(page.getByRole("article", { name: /UR-REL-01/i })).toBeVisible();
-    await expect(page.getByRole("article", { name: /SR-WF-01/i })).toBeVisible();
-    await expect(page.getByRole("article", { name: /FT-API-01/i })).toBeVisible();
+    await expect(page.getByLabel("Project name")).toHaveValue("Commerce Order Flow Demo");
+    await expect(page.getByRole("article", { name: /UR-AUTH-01/i })).toBeVisible();
+    await expect(page.getByRole("article", { name: /SR-CART-01/i })).toBeVisible();
+    await expect(page.getByRole("article", { name: /FT-SHIP-01/i })).toBeVisible();
+  });
+
+  test("switches demo dataset language in place", async ({ page }) => {
+    await page.goto("/demo");
+
+    await page.getByRole("button", { name: "Use Korean demo data" }).click();
+
+    await expect(page.getByLabel("Project name")).toHaveValue("커머스 주문 흐름 데모");
+    await expect(page.getByText("회원 로그인")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Load YAML file" })).toBeVisible();
   });
 
   test("does not show the warning on refresh shortcuts before any changes", async ({ page }) => {

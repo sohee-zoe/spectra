@@ -9,13 +9,17 @@ Spectra는 엔지니어링 프로젝트의 **사용자 요구사항(UR)**, **시
 
 ## Demo
 
-### Board View
+### Demo View
 
-<img src="docs/assets/spectra-board.png" alt="Spectra board view" width="900">
+<img src="docs/assets/spectra-demo-01.png" alt="Spectra demo view 1" width="900">
 
-### Graph View
+<img src="docs/assets/spectra-demo-02.png" alt="Spectra demo view 2" width="900">
 
-<img src="docs/assets/spectra-graph.png" alt="Spectra graph view" width="900">
+<img src="docs/assets/spectra-demo-03.png" alt="Spectra demo view 3" width="900">
+
+<img src="docs/assets/spectra-demo-04.png" alt="Spectra demo view 4" width="900">
+
+<img src="docs/assets/spectra-demo-05.png" alt="Spectra demo view 5" width="900">
 
 ## Key Features
 

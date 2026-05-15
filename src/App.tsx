@@ -27,7 +27,10 @@ import {
   validateTraceability,
   getLabel,
 } from "./domain/projectHelpers";
-import { demoProjectData } from "./domain/demoData";
+import {
+  demoProjectDataByLanguage,
+  type DemoLanguage,
+} from "./domain/demoData";
 import { TopBar } from "./components/TopBar";
 import { RequirementColumn } from "./components/RequirementColumn";
 import { RightPanel } from "./components/RightPanel";
@@ -48,10 +51,14 @@ import { createExitWarningController } from "./exitWarning";
 type AppMode = "workspace" | "demo";
 
 const STORAGE_KEY = "spectra.requirements.v1";
-const DEMO_STORAGE_KEY = "spectra.requirements.demo.v1";
+const DEMO_LANGUAGE_STORAGE_KEY = "spectra.requirements.demo.language.v1";
 
 function getAppMode(pathname = window.location.pathname): AppMode {
   return pathname === "/demo" ? "demo" : "workspace";
+}
+
+function getDemoStorageKey(language: DemoLanguage): string {
+  return `spectra.requirements.demo.${language}.v1`;
 }
 
 function loadFromStorage(storageKey: string, fallback: ProjectData): ProjectData {
@@ -82,8 +89,13 @@ const COLUMNS: RequirementType[] = ["UR", "SR", "FEATURE"];
 
 function App() {
   const mode = getAppMode();
-  const storageKey = mode === "demo" ? DEMO_STORAGE_KEY : STORAGE_KEY;
-  const initialProject = mode === "demo" ? demoProjectData : createEmptyProject("새 프로젝트");
+  const [demoLanguage, setDemoLanguage] = useState<DemoLanguage>(() => {
+    const saved = localStorage.getItem(DEMO_LANGUAGE_STORAGE_KEY);
+    return saved === "ko" ? "ko" : "en";
+  });
+  const storageKey = mode === "demo" ? getDemoStorageKey(demoLanguage) : STORAGE_KEY;
+  const initialProject =
+    mode === "demo" ? demoProjectDataByLanguage[demoLanguage] : createEmptyProject("새 프로젝트");
   const [data, setData] = useState<ProjectData>(() => loadFromStorage(storageKey, initialProject));
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editing, setEditing] = useState<EditingState>(null);
@@ -100,6 +112,16 @@ function App() {
     return (localStorage.getItem("spectra.theme") as "dark" | "light") || "dark";
   });
   const [showExitModal, setShowExitModal] = useState(false);
+
+  useEffect(() => {
+    if (mode !== "demo") return;
+    localStorage.setItem(DEMO_LANGUAGE_STORAGE_KEY, demoLanguage);
+    setData(loadFromStorage(getDemoStorageKey(demoLanguage), demoProjectDataByLanguage[demoLanguage]));
+    setSelectedId(null);
+    setEditing(null);
+    setConfirmDelete(null);
+    setAdding(null);
+  }, [demoLanguage, mode]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -436,6 +458,8 @@ function App() {
         onMarkdownExport={handleMarkdownExport}
         onImport={handleImport}
         onNewProject={handleNewProject}
+        demoLanguage={mode === "demo" ? demoLanguage : null}
+        onDemoLanguageChange={mode === "demo" ? setDemoLanguage : undefined}
       />
 
       {importError && (

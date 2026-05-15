@@ -44,7 +44,7 @@ function nodeLabel(item: RequirementItem, links: RequirementLink[]) {
         {item.content}
       </div>
       {(attrChips.length > 0 || tagChips.length > 0) && (
-        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 8 }}>
+        <div className="graph-node-chip-row">
           {attrChips.map(chip => <span key={chip.label} className={chipClassName(chip)}>{chip.label}</span>)}
           {tagChips.map(chip => <span key={chip.label} className={chipClassName(chip)}>{chip.label}</span>)}
         </div>
